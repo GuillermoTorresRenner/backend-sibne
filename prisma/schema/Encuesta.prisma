@@ -1,0 +1,7 @@
+model Encuesta {
+  id     Int  @id @default(autoincrement())
+  activo Boolean
+  transacciones Transaccion[]
+  encuestaEmpresas EncuestaEmpresa[]
+  encuestaPlantas EncuestaPlanta[]
+}

@@ -1,0 +1,7 @@
+model ArchivoAdjunto {
+  id            Int    @id @default(autoincrement())
+  nombreArchivo String
+  tipo          String
+  ext           String
+  fileData      Bytes
+}

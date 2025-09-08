@@ -1,0 +1,12 @@
+model Transaccion {
+  id           Int     @id @default(autoincrement())
+  cantidadTCalOut Float
+  formularioId  Int
+  plantaId      Int
+  encuestaId    Int
+
+  // Relaciones
+  planta        Planta   @relation(fields: [plantaId], references: [id])
+  encuesta      Encuesta @relation(fields: [encuestaId], references: [id])
+  // Relación con Formulario se define cuando exista el modelo Formulario
+}

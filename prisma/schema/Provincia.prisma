@@ -1,0 +1,7 @@
+model Provincia {
+  id       Int    @id @default(autoincrement())
+  regionId Int
+  nombre   String
+  comunas Comuna[]
+  // Relación con Region se puede agregar si se requiere
+}

@@ -1,0 +1,11 @@
+model Usuario {
+  id            String   @id
+  habilitado    Boolean
+  nombre        String
+  apellido      String
+  eliminado     Boolean
+  primerIngreso Boolean
+  usuarioRoles  UsuarioRole[]
+  empresaId     String?
+  empresa       Empresa? @relation(fields: [empresaId], references: [id])
+}

@@ -1,0 +1,5 @@
+model EstadoProceso {
+  id              Int             @id @default(autoincrement())
+  nombre          String
+  encuestaPlantas EncuestaPlanta[]
+}

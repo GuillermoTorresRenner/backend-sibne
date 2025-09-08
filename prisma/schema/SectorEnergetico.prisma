@@ -1,0 +1,6 @@
+model SectorEnergetico {
+  id        Int      @id @default(autoincrement())
+  nombre    String
+  codigoStr String
+  empresas  Empresa[]
+}
