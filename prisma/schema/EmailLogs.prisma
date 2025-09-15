@@ -1,3 +1,4 @@
+//REVISADO
 model EmailLogs {
   id              Int         @id @default(autoincrement())
   fechaHoraRegistro DateTime
@@ -7,6 +8,9 @@ model EmailLogs {
   msje            String
   emailConfigId   Int?
   empresaId       String
+
   emailConfig     EmailConfig? @relation(fields: [emailConfigId], references: [id])
   empresa         Empresa      @relation(fields: [empresaId], references: [id])
+
+  @@map("EmailLogs")
 }

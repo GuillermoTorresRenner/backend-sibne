@@ -1,4 +1,6 @@
+//REVISADO
 model Role {
-  id          String       @id
-  usuarioRole UsuarioRole[]
+  id           String         @id
+  usuarioRoles UsuarioRole[]
+  @@map("Role")
 }

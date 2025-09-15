@@ -1,3 +1,4 @@
+//REVISADO
 model Contacto {
   id                Int    @id @default(autoincrement())
   nombre            String
@@ -8,6 +9,9 @@ model Contacto {
   digitoVerificador String
   empresaId         String
   tipoContactoId    Int
+
   tipoContacto      TipoContacto @relation(fields: [tipoContactoId], references: [id])
   empresa           Empresa      @relation(fields: [empresaId], references: [id])
+
+  @@map("Contacto")
 }

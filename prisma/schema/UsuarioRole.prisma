@@ -1,7 +1,11 @@
+//REVISADO
 model UsuarioRole {
-  userId String
-  roleId String
+  userId  String
+  roleId  String
+
   usuario Usuario @relation(fields: [userId], references: [id])
   role    Role    @relation(fields: [roleId], references: [id])
+
   @@id([userId, roleId])
+  @@map("UsuarioRole")
 }

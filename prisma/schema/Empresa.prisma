@@ -1,24 +1,27 @@
+//REVISADO
 model Empresa {
-  id                      String  @id
-  rut                     Int
-  dv                      String?
-  nombre                  String?
-  razonSocial             String?
-  habilitado              Boolean
-  sectorEnergeticoId      Int
-  sectorEconomicoId       Int
-  subSectorEconomicoId    Int
-  direccion               String?
-  sectorEconomicoSiiId    Int?
+  id                          String   @id
+  rut                         Int
+  dv                          String
+  nombre                      String
+  razonSocial                 String
+  direccion                   String
+  habilitado                  Boolean
+  sectorEnergeticoId          Int
+  sectorEconomicoId           Int
+  subSectorEconomicoId        Int
+  sectorEconomicoSiiId        Int?
   instensidadEnergiaFormObligada Boolean
 
-  // Relaciones
-  sectorEconomico         SectorEconomico @relation(fields: [sectorEconomicoId], references: [id])
-  sectorEnergetico        SectorEnergetico @relation(fields: [sectorEnergeticoId], references: [id])
-  subSectorEconomico      SubSectorEconomico @relation(fields: [subSectorEconomicoId], references: [id])
-  plantas                 Planta[]
-  encuestaEmpresas        EncuestaEmpresa[]
-  emailLogs               EmailLogs[]
-  contactos               Contacto[]
-  usuarios                Usuario[]
+  usuario                     Usuario?
+  sectorEnergetico            SectorEnergetico   @relation(fields: [sectorEnergeticoId], references: [id])
+  sectorEconomico             SectorEconomico    @relation(fields: [sectorEconomicoId], references: [id])
+  subSectorEconomico          SubSectorEconomico @relation(fields: [subSectorEconomicoId], references: [id])
+  sectorEconomicoSii          SectorEconomicoSii? @relation(fields: [sectorEconomicoSiiId], references: [id])
+  contactos                   Contacto[]
+  plantas                     Planta[]
+  encuestaEmpresa             EncuestaEmpresa[]
+  emailLogs                   EmailLogs[]
+
+  @@map("Empresa")
 }

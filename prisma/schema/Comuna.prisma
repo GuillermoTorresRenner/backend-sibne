@@ -1,10 +1,12 @@
+//REVISADO
 model Comuna {
   id         Int     @id @default(autoincrement())
   provinciaId Int
-  provincia   Provincia @relation(fields: [provinciaId], references: [id])
   regionId   Int
   nombre     String
 
   region     Region  @relation(fields: [regionId], references: [id])
   plantas    Planta[]
+
+  @@map("Comuna")
 }

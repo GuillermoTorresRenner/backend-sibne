@@ -1,21 +1,26 @@
-model Energetico {
-  id                      Int      @id @default(autoincrement())
-  activo                  Boolean
-  codigoStr               String
-  nombre                  String
-  descripcion             String
-  libreDisposicion        Boolean
-  densidadValor           Float?
-  densidadUnidadMedidaId  Int?
-  poderCalorificoValor    Float?
-  poderCalorificoUMedidaId Int?
-  pedirHumedad            Boolean
-  pedirPoderCalorifico    Boolean
-  energeticoGrupoId       Int
+//REVISADO
 
-  poderCalorificoUMedida  UnidadMedida? @relation("PoderCalorificoUMedida", fields: [poderCalorificoUMedidaId], references: [id])
-  densidadUMedida         UnidadMedida? @relation("DensidadUMedida", fields: [densidadUnidadMedidaId], references: [id])
-  energeticoGrupo         EnergeticoGrupos @relation(fields: [energeticoGrupoId], references: [id])
-  energeticoUnidadMedida  EnergeticoUnidadMedida[]
-  // Relaciones con TransaccionIn y TransaccionOut requieren modelo Transaccion
+model Energetico {
+  id                        Int      @id @default(autoincrement())
+  activo                    Boolean
+  codigoStr                 String
+  nombre                    String
+  descripcion               String
+  libreDisposicion          Boolean
+  densidadValor             Float?
+  densidadUnidadMedidaId    Int?
+  poderCalorificoValor      Float?
+  poderCalorificoUMedidaId  Int?
+  pedirHumedad              Boolean
+  pedirPoderCalorifico      Boolean
+  energeticoGrupoId         Int
+
+  poderCalorificoUMedida    UnidadMedida?      @relation("PoderCalorificoUMedida", fields: [poderCalorificoUMedidaId], references: [id])
+  densidadUMedida           UnidadMedida?      @relation("DensidadUMedida", fields: [densidadUnidadMedidaId], references: [id])
+  energeticoGrupo           EnergeticoGrupos   @relation(fields: [energeticoGrupoId], references: [id])
+  energeticoUnidadMedida    EnergeticoUnidadMedida[]
+  transaccionIn             Transaccion[]      @relation("TransaccionIn")
+  transaccionOut            Transaccion[]      @relation("TransaccionOut")
+
+  @@map("Energetico")
 }

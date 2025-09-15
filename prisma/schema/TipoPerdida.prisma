@@ -1,9 +1,9 @@
 //REVISADO
-model TipoUsoProceso {
+model TipoPerdida {
   id        Int    @id @default(autoincrement())
   codigoStr String
   nombre    String
   orden     Int
 
-  @@map("TipoUsoProceso")
+  @@map("TipoPerdida")
 }

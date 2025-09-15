@@ -1,8 +1,12 @@
+//REVISADO
 model SubSectorEconomico {
-  id               Int    @id @default(autoincrement())
+  id               Int              @id @default(autoincrement())
   nombre           String
   activo           Boolean
   sectorEconomicoId Int
-  sectorEconomico  SectorEconomico @relation(fields: [sectorEconomicoId], references: [id])
+
+  sectorEconomico  SectorEconomico  @relation(fields: [sectorEconomicoId], references: [id])
   empresas         Empresa[]
+
+  @@map("SubSectorEconomico")
 }

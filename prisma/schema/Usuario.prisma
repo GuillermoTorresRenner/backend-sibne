@@ -1,3 +1,4 @@
+//REVISADO
 model Usuario {
   id            String   @id
   habilitado    Boolean

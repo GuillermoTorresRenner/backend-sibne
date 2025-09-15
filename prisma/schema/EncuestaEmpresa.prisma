@@ -1,3 +1,4 @@
+//REVISADO
 model EncuestaEmpresa {
   empresaId        String
   encuestaId       Int
@@ -8,4 +9,5 @@ model EncuestaEmpresa {
   estadoEmpresa    EstadoEmpresa  @relation(fields: [estadoEmpresaId], references: [id])
 
   @@id([empresaId, encuestaId])
+  @@map("EncuestaEmpresa")
 }

@@ -1,14 +1,13 @@
+//REVISADO
 model Planta {
-  id        Int    @id @default(autoincrement())
-  codigo    Int
-  nombre    String
-  activo    Boolean
-  comunaId  Int
-  empresaId String
+  id            Int            @id @default(autoincrement())
+  codigo        Int
+  nombre        String
+  activo        Boolean
+  comunaId      Int
+  empresaId     String
 
-  // Relaciones
-  empresa   Empresa @relation(fields: [empresaId], references: [id])
-  comuna    Comuna  @relation(fields: [comunaId], references: [id])
-  transacciones Transaccion[]
-  encuestaPlantas EncuestaPlanta[]
+  comuna        Comuna         @relation(fields: [comunaId], references: [id])
+  empresa       Empresa        @relation(fields: [empresaId], references: [id])
+  encuestaPlanta EncuestaPlanta[]
 }

@@ -1,3 +1,4 @@
+//REVISADO
 model Region {
   id       Int     @id @default(autoincrement())
   nombre   String
@@ -5,4 +6,6 @@ model Region {
   posicion Int
 
   comunas  Comuna[]
+
+  @@map("Region")
 }
