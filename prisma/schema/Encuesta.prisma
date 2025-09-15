@@ -11,9 +11,11 @@ model Encuesta {
   activo                Boolean
   archivoAdjuntoid      Int?
 
-  archivoAdjuntoEntidad ArchivoAdjunto?    @relation(fields: [archivoAdjuntoid], references: [id])
+  archivoAdjuntoEntidad ArchivoAdjunto?    @relation("ArchivoAdjuntoEntidad", fields: [archivoAdjuntoid], references: [id])
   encuestaEmpresa       EncuestaEmpresa[]
   encuestaPlanta        EncuestaPlanta[]
+  intensidadEnergEncuestaEmpresas IntensidadEnergEncuestaEmpresa[]
+  reportes                Reporte[]
 
   @@map("Encuesta")
 }

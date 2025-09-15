@@ -19,8 +19,9 @@ model Energetico {
   densidadUMedida           UnidadMedida?      @relation("DensidadUMedida", fields: [densidadUnidadMedidaId], references: [id])
   energeticoGrupo           EnergeticoGrupos   @relation(fields: [energeticoGrupoId], references: [id])
   energeticoUnidadMedida    EnergeticoUnidadMedida[]
-  transaccionIn             Transaccion[]      @relation("TransaccionIn")
-  transaccionOut            Transaccion[]      @relation("TransaccionOut")
+  transaccionesIn           Transaccion[]      @relation("EnergeticoIn")
+  transaccionesOut          Transaccion[]      @relation("EnergeticoOut")
+  transaccionesRegionDest   Transaccion[]      @relation("TransaccionRegionDest")
 
   @@map("Energetico")
 }

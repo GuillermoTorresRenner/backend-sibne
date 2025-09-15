@@ -15,10 +15,11 @@ model UnidadMedida {
   energeticoUnidadMedida EnergeticoUnidadMedida[]
   factoresOrigen    FactorConversion[] @relation("UOrigen")
   factoresDestino   FactorConversion[] @relation("UDestino")
-  transaccionIn     Transaccion[] @relation("UnidadMedidaIn")
-  transaccionOut    Transaccion[] @relation("UnidadMedidaOut")
-  transaccionNoAprovechada Transaccion[] @relation("UnidadMedidaNoAprovechada")
-  transaccionCapInstalada  Transaccion[] @relation("UnidadMedidaCapInstalada")
+  transaccionesIn            Transaccion[] @relation("TransaccionUnidadMedidaIn")
+  transaccionesOut           Transaccion[] @relation("TransaccionUnidadMedidaOut")
+  transaccionesNoAprovechada Transaccion[] @relation("TransaccionUnidadMedidaNoAprovechada")
+  poderCalorificoEnergeticos Energetico[] @relation("PoderCalorificoUMedida")
+  densidadEnergeticos        Energetico[] @relation("DensidadUMedida")
 
   @@map("UnidadMedida")
 }

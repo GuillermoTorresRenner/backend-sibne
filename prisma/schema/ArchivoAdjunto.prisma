@@ -1,10 +1,13 @@
 //REVISADO
 model ArchivoAdjunto {
-  id            Int    @id @default(autoincrement())
-  nombreArchivo String
-  tipo          String
-  ext           String
-  fileData      Bytes
+  id                Int       @id @default(autoincrement())
+  nombreArchivo     String
+  tipo              String
+  ext               String
+  fileData          Bytes
 
+  encuestas         Encuesta[] @relation("ArchivoAdjuntoEntidad")
+  // Si solo una encuesta puede tener un archivo adjunto, usa:
+  // encuesta Encuesta?
   @@map("ArchivoAdjunto")
 }
