@@ -5,6 +5,7 @@ model Pais {
   iso3       String
   nombre     String
   numeroIso  Int
+  transacciones Transaccion[]
 
   @@map("Pais")
 }

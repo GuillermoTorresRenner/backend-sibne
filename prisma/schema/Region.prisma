@@ -6,6 +6,7 @@ model Region {
   posicion Int
 
   comunas  Comuna[]
+  transaccionesDest  Transaccion[]
 
   @@map("Region")
 }

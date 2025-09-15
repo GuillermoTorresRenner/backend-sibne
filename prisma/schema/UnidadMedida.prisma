@@ -20,6 +20,7 @@ model UnidadMedida {
   transaccionesNoAprovechada Transaccion[] @relation("TransaccionUnidadMedidaNoAprovechada")
   poderCalorificoEnergeticos Energetico[] @relation("PoderCalorificoUMedida")
   densidadEnergeticos        Energetico[] @relation("DensidadUMedida")
+  transaccionesCapInstalada   Transaccion[] @relation("UnidadMedidaCapInstalada")
 
   @@map("UnidadMedida")
 }

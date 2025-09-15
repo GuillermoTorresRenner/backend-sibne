@@ -10,4 +10,5 @@ model Planta {
   comuna        Comuna         @relation(fields: [comunaId], references: [id])
   empresa       Empresa        @relation(fields: [empresaId], references: [id])
   encuestaPlanta EncuestaPlanta[]
+  transacciones  Transaccion[]
 }

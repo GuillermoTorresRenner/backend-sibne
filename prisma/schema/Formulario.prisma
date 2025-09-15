@@ -6,6 +6,7 @@ model Formulario {
   codigoNav              String
 
   categoriaTransacciones CategoriaTransaccion[]
+  transacciones           Transaccion[]
 
   @@map("Formulario")
 }

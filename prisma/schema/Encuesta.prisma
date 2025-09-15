@@ -16,6 +16,7 @@ model Encuesta {
   encuestaPlanta        EncuestaPlanta[]
   intensidadEnergEncuestaEmpresas IntensidadEnergEncuestaEmpresa[]
   reportes                Reporte[]
+  transacciones           Transaccion[]
 
   @@map("Encuesta")
 }

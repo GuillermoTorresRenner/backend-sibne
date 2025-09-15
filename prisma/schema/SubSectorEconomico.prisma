@@ -7,6 +7,7 @@ model SubSectorEconomico {
 
   sectorEconomico  SectorEconomico  @relation(fields: [sectorEconomicoId], references: [id])
   empresas         Empresa[]
+  transaccionesDest Transaccion[]
 
   @@map("SubSectorEconomico")
 }

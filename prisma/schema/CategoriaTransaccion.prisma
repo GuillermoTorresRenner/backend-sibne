@@ -6,6 +6,7 @@ model CategoriaTransaccion {
   formularioId Int
 
   formulario   Formulario @relation(fields: [formularioId], references: [id])
+  transacciones Transaccion[]
 
   @@map("CategoriaTransaccion")
 }
