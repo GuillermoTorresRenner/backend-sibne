@@ -4,7 +4,7 @@ model ArchivoAdjunto {
   nombreArchivo     String
   tipo              String
   ext               String
-  fileData          Bytes
+  FileName          String?
 
   encuestas         Encuesta[] @relation("ArchivoAdjuntoEntidad")
   // Si solo una encuesta puede tener un archivo adjunto, usa:

@@ -36,6 +36,7 @@ model Transaccion {
   detalle                     String?
   subCategoria                String?
   datos                       Json      @default("{}")
+  DatosStr                    String?   // Campo legacy para migración datos como string
 
   energeticoRegionDestId      Int?
   energeticoRegionDest        Energetico? @relation("TransaccionRegionDest", fields: [energeticoRegionDestId], references: [id])

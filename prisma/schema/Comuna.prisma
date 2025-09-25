@@ -4,6 +4,7 @@ model Comuna {
   provinciaId Int
   regionId   Int
   nombre     String
+  Old_Id     Int?    // Campo legacy para migración
 
   region     Region  @relation(fields: [regionId], references: [id])
   plantas    Planta[]
