@@ -10,3 +10,4 @@ model UsuarioRole {
   @@id([userId, roleId])
   @@map("UsuarioRole")
 }
+                                    
