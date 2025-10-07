@@ -1,31 +1,62 @@
-import { IsEmail, IsNotEmpty, IsString, Length } from 'class-validator';
+import {
+  IsEmail,
+  IsNotEmpty,
+  IsString,
+  Length,
+  IsOptional,
+  IsBoolean,
+} from 'class-validator';
 
 export class CreateUsuarioDto {
   @IsString()
-  @Length(3, 10)
   @IsNotEmpty()
-  userName: string;
+  id: string; // ID generado externamente o UUID
+
+  @IsString()
+  @Length(3, 50)
+  @IsOptional()
+  userName?: string;
 
   @IsEmail()
-  @IsNotEmpty()
-  email: string;
+  @IsOptional()
+  email?: string;
 
   @IsString()
-  @Length(4, 20)
+  @Length(4, 100)
   @IsNotEmpty()
-  password: string;
-
-  @IsString()
-  @Length(2, 100)
-  @IsNotEmpty()
-  nombre: string;
+  passwordHash: string; // Ya hasheada externamente o se hashea en el servicio
 
   @IsString()
   @Length(2, 100)
-  @IsNotEmpty()
-  apellido: string;
+  @IsOptional()
+  nombre?: string;
 
   @IsString()
-  @IsNotEmpty()
-  roleId: string;
+  @Length(2, 100)
+  @IsOptional()
+  apellido?: string;
+
+  @IsOptional()
+  @IsString()
+  phoneNumber?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  emailConfirmed?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  phoneNumberConfirmed?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  twoFactorEnabled?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  lockoutEnabled?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  habilitado?: boolean;
 }

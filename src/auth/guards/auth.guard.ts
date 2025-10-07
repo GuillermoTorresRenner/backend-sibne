@@ -6,36 +6,52 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
-import { UsersService } from '../../users/users.service';
+import { UsuariosService } from '../../usuarios/usuarios.service';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(
-    private readonly usersService: UsersService,
+    private readonly usuariosService: UsuariosService,
     private readonly jwtService: JwtService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<Request>();
-    const token = this.extractTokenFromCookies(request);
+    const token =
+      this.extractTokenFromHeader(request) ||
+      this.extractTokenFromCookies(request);
+
     if (!token) {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException('Token no encontrado');
     }
+
     try {
       const payload = await this.jwtService.verifyAsync(token, {
         secret: process.env.JWT_SECRET,
       });
-      const user = await this.usersService.findById(payload.id);
+
+      const usuario = await this.usuariosService.findOne(payload.id);
+      if (!usuario || !usuario.habilitado) {
+        throw new UnauthorizedException('Usuario no autorizado');
+      }
+
+      const roles = await this.usuariosService.getUserRoles(payload.id);
+
       request['userID'] = payload.id;
-      request['role'] = user.role;
-    } catch {
-      throw new UnauthorizedException();
+      request['usuario'] = usuario;
+      request['roles'] = roles;
+    } catch (error) {
+      throw new UnauthorizedException('Token inválido');
     }
     return true;
   }
 
+  private extractTokenFromHeader(request: Request): string | null {
+    const [type, token] = request.headers.authorization?.split(' ') ?? [];
+    return type === 'Bearer' ? token : null;
+  }
+
   private extractTokenFromCookies(request: Request): string | null {
-    const token = request.cookies['token'];
-    return token ? token : null;
+    return request.cookies?.['token'] || null;
   }
 }

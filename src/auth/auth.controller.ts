@@ -8,13 +8,13 @@ import {
   InternalServerErrorException,
   Res,
   NotFoundException,
+  UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { LoginDto } from './dto/login.dto';
-import { RegisterDto } from './dto/register.dto';
-import { Auth } from './decorators/auth.decorator';
-import { Roles } from './roles.enum';
-import { UsersService } from '../users/users.service';
+import { LoginUsuario } from '../usuarios/dto/login-usuario.dto';
+import { CreateUsuarioDto } from '../usuarios/dto/create-usuario.dto';
+import { AuthGuard } from './guards/auth.guard';
+import { UsuariosService } from '../usuarios/usuarios.service';
 import { ActiveUser } from './decorators/activeUser.decorator';
 import { ApiBearerAuth } from '@nestjs/swagger';
 
@@ -22,20 +22,20 @@ import { ApiBearerAuth } from '@nestjs/swagger';
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
-    private readonly userService: UsersService,
+    private readonly usuariosService: UsuariosService,
   ) {}
   @ApiBearerAuth()
   @Post('register')
-  async register(@Body() registerDto: RegisterDto) {
+  async register(@Body() createUsuarioDto: CreateUsuarioDto) {
     try {
-      const isUserRegistered = await this.userService.findByEmail(
-        registerDto.email,
+      const isUserRegistered = await this.usuariosService.findByEmail(
+        createUsuarioDto.email,
       );
       if (isUserRegistered) {
         throw new BadRequestException('Usuario ya registrado');
       }
-      const newUser = await this.authService.register(registerDto);
-      return { message: 'Usuario registrado exitosamente', user: newUser };
+      const newUser = await this.authService.register(createUsuarioDto);
+      return { message: 'Usuario registrado exitosamente', usuario: newUser };
     } catch (error) {
       throw new InternalServerErrorException(
         'Error al registrar usuario',
@@ -43,31 +43,33 @@ export class AuthController {
       );
     }
   }
+
   @Post('login')
-  async login(@Body() loginDto: LoginDto, @Req() req, @Res() res) {
+  async login(@Body() loginDto: LoginUsuario, @Req() req, @Res() res) {
     try {
-      const { accessToken, refreshToken } =
-        await this.authService.login(loginDto);
-      const user = await this.userService.findByEmail(loginDto.email);
-      await this.userService.updateLastConnection(user.id);
-      res.cookie('token', accessToken, {
+      const result = await this.authService.login(loginDto);
+
+      res.cookie('token', result.accessToken, {
         httpOnly: true,
-        secure: true,
+        secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
-        maxAge: 5 * 60 * 1000,
+        maxAge: 5 * 60 * 1000, // 5 minutos
       });
-      res.cookie('refreshToken', refreshToken, {
+
+      res.cookie('refreshToken', result.refreshToken, {
         httpOnly: true,
-        secure: true,
+        secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
-        maxAge: 24 * 60 * 60 * 1000,
+        maxAge: 24 * 60 * 60 * 1000, // 24 horas
       });
+
       return res.status(200).json({
         message: 'Login exitoso',
-        user: { name: user.name, surname: user.surname, role: user.role },
+        usuario: result.usuario,
+        accessToken: result.accessToken, // Para uso con Bearer token
       });
     } catch (error) {
-      return res.status(500).json({
+      return res.status(401).json({
         message: error.message,
       });
     }
@@ -79,6 +81,7 @@ export class AuthController {
       if (!refreshToken) {
         return res.status(401).json({ message: 'No refresh token' });
       }
+
       // Decodificar el token para obtener el id
       let payload: any;
       try {
@@ -89,51 +92,68 @@ export class AuthController {
           .status(401)
           .json({ message: 'Refresh token inválido o expirado' });
       }
-      const { accessToken, refreshToken: newRefreshToken } =
-        await this.authService.refresh(payload.id, refreshToken);
-      res.cookie('token', accessToken, {
+
+      const result = await this.authService.refresh(payload.id, refreshToken);
+
+      res.cookie('token', result.accessToken, {
         httpOnly: true,
-        secure: true,
+        secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
         maxAge: 5 * 60 * 1000,
       });
-      res.cookie('refreshToken', newRefreshToken, {
+
+      res.cookie('refreshToken', result.refreshToken, {
         httpOnly: true,
-        secure: true,
+        secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
         maxAge: 24 * 60 * 60 * 1000,
       });
-      return res.status(200).json({ message: 'Token refrescado' });
+
+      return res.status(200).json({
+        message: 'Token refrescado',
+        usuario: result.usuario,
+        accessToken: result.accessToken,
+      });
     } catch (error) {
       return res.status(500).json({ message: error.message });
     }
   }
-  @ApiBearerAuth()
-  @Auth()
-  @Get('me')
-  async me(@ActiveUser() user, @Res() res) {
-    try {
-      const foundedUser = await this.userService.findById(user.userID);
 
-      if (!foundedUser) {
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard)
+  @Get('me')
+  async me(@Req() req, @Res() res) {
+    try {
+      const usuario = await this.usuariosService.findOne(req.userID);
+      const roles = await this.usuariosService.getUserRoles(req.userID);
+
+      if (!usuario) {
         return res.clearCookie('token').json({ message: 'logout' });
       }
+
       return res.json({
-        name: foundedUser.name,
-        surname: foundedUser.surname,
-        role: foundedUser.role,
+        id: usuario.id,
+        userName: usuario.userName,
+        email: usuario.email,
+        nombre: usuario.nombre,
+        apellido: usuario.apellido,
+        roles: roles,
       });
     } catch (error) {
       throw new NotFoundException({ message: 'Usuario no encontrado', error });
     }
   }
 
-  @Get('logout')
-  logout(@Res() res) {
+  @Post('logout')
+  @UseGuards(AuthGuard)
+  async logout(@Req() req, @Res() res) {
     try {
+      // Opcional: Invalidar el refresh token en la base de datos
+      await this.usuariosService.updateRefreshToken(req.userID, null);
+
       res.clearCookie('token');
       res.clearCookie('refreshToken');
-      return res.json({ message: 'logout' });
+      return res.json({ message: 'Sesión cerrada exitosamente' });
     } catch (error) {
       throw new InternalServerErrorException({
         message: 'Error al cerrar sesión',

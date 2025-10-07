@@ -1,12 +1,11 @@
-import { PartialType } from '@nestjs/swagger';
-import { CreateUsuarioDto } from './create-usuario.dto';
 import { IsNotEmpty, IsString } from 'class-validator';
 
-export class LoginUsuario extends PartialType(CreateUsuarioDto) {
+export class LoginUsuario {
   @IsString()
   @IsNotEmpty()
-  userName: string;
+  userName: string; // Puede ser userName o email
+
   @IsString()
   @IsNotEmpty()
-  passwordHash: string;
+  passwordHash: string; // Password en texto plano, se hashea en el servicio
 }
