@@ -7,6 +7,11 @@
   "license": "UNLICENSED",
   "scripts": {
     "seed": "ts-node prisma/seed.ts",
+    "passwords:encrypt": "ts-node scripts/encrypt-passwords.ts",
+    "passwords:check": "ts-node scripts/encrypt-passwords.ts --verify-only",
+    "db:backup": "bash scripts/backup_db.sh",
+    "db:restore": "bash scripts/restore_db.sh",
+    "db:list-backups": "bash scripts/restore_db.sh --list",
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
