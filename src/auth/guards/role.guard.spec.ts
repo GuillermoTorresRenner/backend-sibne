@@ -26,13 +26,15 @@ describe('RoleGuard', () => {
 
   it('should allow access if role matches', () => {
     (reflector.getAllAndOverride as jest.Mock).mockReturnValue(['ADMIN']);
-    const context: any = createContext({ role: 'ADMIN' });
+    const context: any = createContext({ roles: ['ADMIN', 'USER'] });
     expect(guard.canActivate(context)).toBe(true);
   });
 
   it('should deny access if role does not match', () => {
     (reflector.getAllAndOverride as jest.Mock).mockReturnValue(['ADMIN']);
-    const context: any = createContext({ role: 'USER' });
-    expect(() => guard.canActivate(context)).toThrow();
+    const context: any = createContext({ roles: ['USER'] });
+    expect(() => guard.canActivate(context)).toThrow(
+      'No tienes permisos para acceder a este recurso',
+    );
   });
 });

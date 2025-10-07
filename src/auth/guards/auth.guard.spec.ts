@@ -1,60 +1,92 @@
 import { AuthGuard } from './auth.guard';
 import { JwtService } from '@nestjs/jwt';
-import { UsersService } from '../../users/users.service';
+import { UsuariosService } from '../../usuarios/usuarios.service';
 import { UnauthorizedException } from '@nestjs/common';
 
 describe('AuthGuard', () => {
   let guard: AuthGuard;
-  let usersService: any;
+  let usuariosService: any;
   let jwtService: any;
 
   beforeEach(() => {
-    usersService = { findById: jest.fn() };
+    usuariosService = {
+      findOne: jest.fn(),
+      getUserRoles: jest.fn(),
+    };
     jwtService = { verifyAsync: jest.fn() };
-    guard = new AuthGuard(usersService, jwtService);
+    guard = new AuthGuard(usuariosService, jwtService);
+  });
+
+  it('should be defined', () => {
+    expect(guard).toBeDefined();
   });
 
   it('should throw if no token', async () => {
     const context: any = {
-      switchToHttp: () => ({ getRequest: () => ({ cookies: {} }) }),
+      switchToHttp: () => ({
+        getRequest: () => ({
+          cookies: {},
+          headers: {},
+        }),
+      }),
     };
     await expect(guard.canActivate(context)).rejects.toThrow(
-      UnauthorizedException,
+      'Token no encontrado',
     );
   });
 
   it('should throw if token is invalid', async () => {
     const context: any = {
       switchToHttp: () => ({
-        getRequest: () => ({ cookies: { token: 'bad' } }),
+        getRequest: () => ({
+          cookies: { token: 'bad-token' },
+          headers: {},
+        }),
       }),
     };
     jwtService.verifyAsync.mockRejectedValue(new Error('invalid'));
-    await expect(guard.canActivate(context)).rejects.toThrow(
-      UnauthorizedException,
-    );
+    await expect(guard.canActivate(context)).rejects.toThrow('Token inválido');
   });
 
   it('should throw if user not found', async () => {
     const context: any = {
       switchToHttp: () => ({
-        getRequest: () => ({ cookies: { token: 'token' } }),
+        getRequest: () => ({
+          cookies: { token: 'valid-token' },
+          headers: {},
+        }),
       }),
     };
-    jwtService.verifyAsync.mockResolvedValue({ id: '1' });
-    usersService.findById.mockResolvedValue(null);
-    await expect(guard.canActivate(context)).rejects.toThrow(
-      UnauthorizedException,
-    );
+    jwtService.verifyAsync.mockResolvedValue({ id: 'test-user-id' });
+    usuariosService.findOne.mockResolvedValue(null);
+
+    await expect(guard.canActivate(context)).rejects.toThrow('Token inválido');
   });
 
-  it('should set userID and role if valid', async () => {
-    const req: any = { cookies: { token: 'token' } };
-    const context: any = { switchToHttp: () => ({ getRequest: () => req }) };
-    jwtService.verifyAsync.mockResolvedValue({ id: '1' });
-    usersService.findById.mockResolvedValue({ id: '1', role: 'ADMIN' });
-    await expect(guard.canActivate(context)).resolves.toBe(true);
-    expect(req.userID).toBe('1');
-    expect(req.role).toBe('ADMIN');
+  it('should set userID, usuario and roles if valid', async () => {
+    const req: any = {
+      cookies: { token: 'valid-token' },
+      headers: {},
+    };
+    const context: any = {
+      switchToHttp: () => ({ getRequest: () => req }),
+    };
+
+    const mockUsuario = {
+      id: 'test-user-id',
+      userName: 'testuser',
+      habilitado: true,
+    };
+
+    jwtService.verifyAsync.mockResolvedValue({ id: 'test-user-id' });
+    usuariosService.findOne.mockResolvedValue(mockUsuario);
+    usuariosService.getUserRoles.mockResolvedValue(['USER']);
+
+    const result = await guard.canActivate(context);
+
+    expect(result).toBe(true);
+    expect(req.userID).toBe('test-user-id');
+    expect(req.usuario).toEqual(mockUsuario);
+    expect(req.roles).toEqual(['USER']);
   });
 });
