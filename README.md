@@ -239,6 +239,8 @@ npm run build && npm run test
 
 ## 🐳 Docker
 
+### Desarrollo Local
+
 ```bash
 # Levantar base de datos PostgreSQL
 docker-compose up -d
@@ -249,6 +251,45 @@ docker-compose logs -f
 # Detener servicios
 docker-compose down
 ```
+
+### Construcción de Imagen
+
+```bash
+# Construir imagen local
+docker build -t sibne-backend:latest .
+
+# Construir con etiqueta específica
+docker build -t sibne-backend:v1.0.0 .
+
+# Construir para múltiples plataformas
+docker buildx build --platform linux/amd64,linux/arm64 -t sibne-backend:latest .
+```
+
+### Ejecución con Docker
+
+```bash
+# Ejecutar contenedor con variables de entorno
+docker run -d \
+  --name sibne-backend \
+  --env-file .env \
+  -p 3000:3000 \
+  sibne-backend:latest
+
+# Ejecutar con PostgreSQL en red
+docker network create sibne-network
+docker run -d --name postgres --network sibne-network postgres:15
+docker run -d --name backend --network sibne-network -p 3000:3000 sibne-backend:latest
+```
+
+### CI/CD con GitHub Actions
+
+El proyecto incluye un workflow completo que:
+
+- ✅ Ejecuta tests unitarios y e2e
+- ✅ Construye la imagen Docker optimizada
+- ✅ Sube a DockerHub con etiquetas `latest` y `commit-sha`
+- ✅ Realiza escaneo de seguridad con Trivy
+- ✅ Soporte para múltiples arquitecturas (amd64, arm64)
 
 ## ⚙️ Variables de Entorno
 
