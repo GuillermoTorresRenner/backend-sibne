@@ -1,252 +1,305 @@
-## Ejemplos de uso de endpoints
-
-### Registro
-
-```http
-POST /auth/register
-Content-Type: application/json
-
-{
-  "email": "usuario@correo.com",
-  "password": "contraseña123",
-  "name": "Nombre",
-  "surname": "Apellido",
-  "role": "ADMIN"
-}
-```
-
-### Login
-
-```http
-POST /auth/login
-Content-Type: application/json
-
-{
-  "email": "usuario@correo.com",
-  "password": "contraseña123"
-}
-```
-
-Tokens se reciben en cookies seguras.
-
-### Refrescar token
-
-```http
-POST /auth/refresh
-Cookie: refreshToken=<refresh_token>
-```
-
-Devuelve nuevos tokens en cookies.
-
-### Obtener usuario autenticado
-
-```http
-GET /auth/me
-Cookie: token=<access_token>
-```
-
-### Logout
-
-```http
-GET /auth/logout
-```
-
-Elimina las cookies de autenticación.
+# 🏢 SIBNE Backend
 
 <p align="center">
   <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
 </p>
 
-Este proyecto es un boilerplate para backend con NestJS y Prisma, implementando autenticación JWT con refresh tokens, gestión de usuarios y productos, y estructura modular.
+**Sistema de Información del Balance Nacional de Energía** - API Backend desarrollada con NestJS, Prisma ORM y PostgreSQL, implementando autenticación JWT con sistema de roles para la gestión de información energética empresarial.
 
-## Tecnologías principales
+## 🚀 Tecnologías Principales
 
-- NestJS
-- Prisma ORM
-- PostgreSQL
-- JWT (access y refresh tokens)
-- Docker (opcional)
+- **NestJS** v11.1.6 - Framework Node.js progresivo
+- **Prisma ORM** v6.16.2 - ORM moderno para PostgreSQL
+- **PostgreSQL** - Base de datos relacional
+- **JWT** - Autenticación con tokens
+- **bcrypt** - Encriptación de contraseñas
+- **TypeScript** - Tipado estático
 
-## Estructura principal
+## 📁 Estructura del Proyecto
 
-- `src/` - Código fuente principal
-  - `auth/` - Módulo de autenticación (login, registro, guards, decoradores)
-  - `users/` - Módulo de usuarios
-  - `products/` - Módulo de productos
-  - `prisma/` - Servicio y módulo de acceso a base de datos
-  - `utils/` - Utilidades
-- `prisma/schema/` - Schemas Prisma divididos por dominio
-- `test/` - Pruebas e2e
+```
+src/
+├── auth/                     # Sistema de autenticación
+│   ├── decorators/          # @Auth, @ActiveUser, @Role
+│   ├── guards/              # AuthGuard, RoleGuard
+│   ├── dto/                 # DTOs de login/registro
+│   ├── roles.enum.ts        # Enum de roles (AuthRoles)
+│   └── auth.service.ts      # Lógica de autenticación
+├── usuarios/                # Gestión de usuarios
+├── prisma/                  # Servicio Prisma
+├── test/                    # Controlador de pruebas
+└── utils/                   # Utilidades
 
-## Autenticación
+prisma/schema/               # Schemas divididos por dominio
+├── Usuario.prisma
+├── Role.prisma
+├── UsuarioRole.prisma
+├── Empresa.prisma
+└── ...
+```
 
-- **Access token:** Expira en 5 minutos
-- **Refresh token:** Expira en 24 horas, se actualiza cada vez que se usa
-- Ambos tokens se envían en cookies seguras (httpOnly, secure, sameSite strict)
-- El refresh token se almacena en la base de datos por usuario (un solo dispositivo por usuario)
+## 🔐 Sistema de Roles y Autenticación
 
-## Endpoints principales
+### Roles Disponibles
 
-### Auth
+```typescript
+export enum AuthRoles {
+  ADMINISTRADOR = 'Administrador',
+  USUARIO = 'Usuario',
+  USUARIO_EMPRESA = 'Usuario Empresa',
+}
+```
 
-- `POST /auth/register` - Registro de usuario
-- `POST /auth/login` - Login, devuelve access y refresh tokens en cookies
-- `POST /auth/refresh` - Refresca los tokens usando el refresh token
-- `GET /auth/me` - Devuelve datos del usuario autenticado
-- `GET /auth/logout` - Elimina los tokens y cierra sesión
+### Uso de Decoradores
 
-### Users
+```typescript
+import { Auth } from '../auth/decorators/auth.decorator';
+import { AuthRoles } from '../auth/roles.enum';
+import { ActiveUser } from '../auth/decorators/activeUser.decorator';
 
-- `GET /users/:id` - Obtener usuario por id
-- `GET /users` - Listar usuarios (si implementado)
-- `POST /users` - Crear usuario (si implementado)
+@Controller('ejemplo')
+export class EjemploController {
+  // Solo administradores
+  @Get('admin-only')
+  @Auth([AuthRoles.ADMINISTRADOR])
+  adminOnly(@ActiveUser() user) {
+    return { message: 'Solo administradores' };
+  }
 
-### Products
+  // Múltiples roles
+  @Get('multi-role')
+  @Auth([AuthRoles.USUARIO, AuthRoles.ADMINISTRADOR])
+  multiRole(@ActiveUser() user) {
+    return { message: 'Usuarios o administradores' };
+  }
 
-- `GET /products/:id` - Obtener producto por id
-- `GET /products` - Listar productos
-- `POST /products` - Crear producto
-- `PUT /products/:id` - Actualizar producto
-- `DELETE /products/:id` - Eliminar producto
+  // Solo autenticación (sin roles específicos)
+  @Get('protected')
+  @UseGuards(AuthGuard)
+  protected(@ActiveUser() user) {
+    return { message: 'Usuario autenticado', user };
+  }
+}
+```
 
-## Particularidades y buenas prácticas
+## 🔑 Credenciales de Prueba
 
-- Prisma schema dividido por dominio, con un archivo principal que contiene `datasource` y `generator`
-- Uso de decoradores personalizados para roles y usuario activo
-- Guards para roles y autenticación
-- Validación de DTOs con `class-validator`
-- Uso de Docker para base de datos y Adminer
-- Configuración de variables de entorno en `.env`
-- Documentación Swagger disponible en `/docs`
+```typescript
+/**
+ * ADMINISTRADOR:
+ * - username: pvd
+ * - password: BNE_MENDPEDS2024
+ *
+ * USUARIO:
+ * - username: [pendiente]
+ * - password: [pendiente]
+ *
+ * USUARIO EMPRESA:
+ * - username: 00327
+ * - password: jo091
+ */
+```
 
-## Instalación y uso
+## 📋 API Endpoints
+
+### Autenticación
+
+- `POST /api/auth/login` - Iniciar sesión
+- `POST /api/auth/logout` - Cerrar sesión
+- `GET /api/auth/me` - Obtener perfil del usuario
+
+### Endpoints de Prueba
+
+- `GET /api/test/public` - Endpoint público
+- `GET /api/test/protected` - Requiere autenticación
+- `GET /api/test/admin-only` - Solo administradores
+- `GET /api/test/empresa-only` - Solo usuarios empresa
+- `GET /api/test/user-or-admin` - Usuarios o administradores
+
+## 🛠️ Comandos de Desarrollo
+
+### Instalación e Inicio
 
 ```bash
+# Instalar dependencias de Node.js
 npm install
-npm run build
+
+# Instalar dependencias globales (si es necesario)
+npm install -g @nestjs/cli prisma
+
+# Modo desarrollo con hot reload
 npm run start:dev
+
+# Modo debug
+npm run start:debug
+
+# Modo producción
+npm run start:prod
+
+# Compilar proyecto
+npm run build
+
+# Formatear código
+npm run format
+
+# Linting y corrección automática
+npm run lint
 ```
 
-## Migraciones Prisma
+### Base de Datos y Prisma
 
 ```bash
-npx prisma migrate dev --name <nombre>
+# Generar cliente Prisma (después de cambios en schema)
+npx prisma generate
+
+# Ejecutar migraciones en desarrollo
+npx prisma migrate dev --name <nombre_migracion>
+
+# Resetear base de datos (¡CUIDADO! Borra todos los datos)
+npx prisma migrate reset
+
+# Ver estado de migraciones
+npx prisma migrate status
+
+# Abrir Prisma Studio (interfaz gráfica para ver/editar datos)
+npx prisma studio
+
 ```
 
-## Pruebas
+### Gestión de Base de Datos (Scripts Personalizados)
 
 ```bash
+# Crear backup de la base de datos
+npm run db:backup
+
+# Restaurar backup de la base de datos
+npm run db:restore
+
+# Listar backups disponibles
+npm run db:list-backups
+```
+
+### Gestión de Contraseñas (Scripts Personalizados)
+
+```bash
+# Encriptar contraseñas existentes en la base de datos
+npm run passwords:encrypt
+
+# Verificar contraseñas encriptadas (solo verificación)
+npm run passwords:check
+```
+
+### Testing
+
+```bash
+# Tests unitarios
 npm run test
+
+# Tests unitarios en modo watch (se ejecutan automáticamente al cambiar archivos)
+npm run test:watch
+
+# Tests end-to-end (e2e)
 npm run test:e2e
+
+# Tests con coverage (reporte de cobertura)
+npm run test:cov
+
+# Tests en modo debug
+npm run test:debug
 ```
 
-## Variables de entorno
-
-Ver archivo `.env.example` para configuración recomendada.
-
-## Seguridad
-
-- Tokens en cookies httpOnly y secure
-- Refresh token se actualiza en cada uso
-- Acceso a endpoints protegido por guards y decoradores
-
-## Contacto y soporte
-
-- Autor: Guillermo Torres Renner
-- Documentación NestJS: https://docs.nestjs.com
-- Documentación Prisma: https://www.prisma.io/docs
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
-
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
-
-## Description
-
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
-
-## Project setup
+### 🚀 Comandos de Inicio Rápido
 
 ```bash
-$ npm install
+# Setup completo del proyecto (primera vez)
+npm install && npx prisma generate && npx prisma migrate dev
+
+# Iniciar desarrollo completo
+npm run start:dev & npx prisma studio
+
+# Resetear y poblar base de datos
+npx prisma migrate reset && npm run seed
+
+# Verificar estado del proyecto
+npm run build && npm run test
 ```
 
-## Compile and run the project
+## 📚 Documentación API
+
+- **Swagger UI**: `http://localhost:3000/api/docs`
+- **Postman Collection**: Disponible en `/docs`
+
+## 🔒 Seguridad
+
+- **JWT Tokens**: Autenticación stateless con expiración configurable
+- **bcrypt**: Hash seguro de contraseñas con salt rounds
+- **Role Guards**: Control granular de acceso por roles
+- **Input Validation**: Validación de DTOs con class-validator
+- **CORS**: Configuración de políticas de origen cruzado
+
+## 🐳 Docker
 
 ```bash
-# development
-$ npm run start
+# Levantar base de datos PostgreSQL
+docker-compose up -d
 
-# watch mode
-$ npm run start:dev
+# Ver logs
+docker-compose logs -f
 
-# production mode
-$ npm run start:prod
+# Detener servicios
+docker-compose down
 ```
 
-## Run tests
+## ⚙️ Variables de Entorno
 
-```bash
-# unit tests
-$ npm run test
+Crear archivo `.env` basado en `.env.example`:
 
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+```env
+DATABASE_URL="postgresql://usuario:password@localhost:5432/sibne_db"
+JWT_SECRET="tu_jwt_secret_aqui"
+JWT_EXPIRES_IN="1h"
+PORT=3000
 ```
 
-## Deployment
+## 🧪 Testing
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+El proyecto incluye pruebas completas:
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+- **Unit Tests**: Servicios y controladores individuales
+- **E2E Tests**: Flujos completos de autenticación y roles
+- **Integration Tests**: Interacciones con base de datos
+- **API Tests**: Validación de endpoints con curl
 
-```bash
-$ npm install -g mau
-$ mau deploy
-```
+Ver `TESTING_SUMMARY.md` para detalles completos.
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+## 📧 Contacto
 
-## Resources
+- **Proyecto**: SIBNE (Sistema de Información del Balance Nacional de Energía)
+- **Repository**: backend-sibne
+- **Autor**: Guillermo Torres Renner
+- **Email**: soporte@tchile.com
 
-Check out a few resources that may come in handy when working with NestJS:
+## 🚀 Estado del Proyecto
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+- ✅ **Sistema de Autenticación**: Completo con JWT y roles
+- ✅ **Base de Datos**: Configurada con Prisma y PostgreSQL
+- ✅ **Testing**: Suite completa de pruebas implementada
+- ✅ **Documentación**: Swagger UI y guías completas
+- 🔄 **En Desarrollo**: Módulos específicos del dominio energético
 
-## Support
+## 🏗️ Próximos Pasos
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+- [ ] Implementar módulos de gestión energética
+- [ ] Dashboard de métricas y reportes
+- [ ] Integración con APIs externas
+- [ ] Optimización de performance
+- [ ] Deploy a producción
 
-## Stay in touch
+## 📚 Recursos Adicionales
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+- [NestJS Documentation](https://docs.nestjs.com) - Framework documentation
+- [Prisma Documentation](https://www.prisma.io/docs) - ORM documentation
+- [PostgreSQL Documentation](https://www.postgresql.org/docs/) - Database documentation
+- [JWT.io](https://jwt.io/) - JSON Web Token information
 
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+---

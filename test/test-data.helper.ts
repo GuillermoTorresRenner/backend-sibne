@@ -119,7 +119,6 @@ export class TestDataHelper {
     return {
       users: { testUser, adminUser },
       roles: { usuarioRole, adminRole, empresaRole },
-      roles: { userRole, adminRole },
     };
   }
 

@@ -4,7 +4,18 @@ import { RoleGuard } from '../auth/guards/role.guard';
 import { Role } from '../auth/decorators/roles.decorator';
 import { ActiveUser } from '../auth/decorators/activeUser.decorator';
 import { Auth } from '../auth/decorators/auth.decorator';
-
+import { AuthRoles } from '../auth/roles.enum';
+/**
+ * ADMINISTRADOR:
+ * - username: pvd
+ * - password: BNE_MENDPEDS2024
+ * USUARIO:
+ * - username:
+ * - password:
+ * USUARIO EMPRESA:
+ * - username: 00327
+ * - password: jo091
+ */
 @Controller('test')
 export class TestController {
   @Get('public')
@@ -22,16 +33,24 @@ export class TestController {
   }
 
   @Get('admin-only')
-  @Auth(['ADMINISTRADOR'])
+  @Auth([AuthRoles.ADMINISTRADOR])
   adminOnly(@ActiveUser() user) {
     return {
       message: 'Solo administradores pueden acceder',
       user: user,
     };
   }
+  @Get('usuario-only')
+  @Auth([AuthRoles.USUARIO])
+  usuarioEmpresaOnly(@ActiveUser() user) {
+    return {
+      message: 'Solo usuarios pueden acceder',
+      user: user,
+    };
+  }
 
   @Get('user-or-admin')
-  @Auth(['USUARIO', 'ADMINISTRADOR'])
+  @Auth([AuthRoles.USUARIO, AuthRoles.ADMINISTRADOR])
   userOrAdmin(@ActiveUser() user) {
     return {
       message: 'Usuarios o administradores pueden acceder',
@@ -40,7 +59,7 @@ export class TestController {
   }
 
   @Get('empresa-only')
-  @Auth(['USUARIO EMPRESA'])
+  @Auth([AuthRoles.USUARIO_EMPRESA])
   empresaOnly(@ActiveUser() user) {
     return {
       message: 'Solo usuarios empresa pueden acceder',
@@ -49,7 +68,7 @@ export class TestController {
   }
 
   @Get('empresa-or-admin')
-  @Auth(['USUARIO EMPRESA', 'ADMINISTRADOR'])
+  @Auth([AuthRoles.USUARIO_EMPRESA, AuthRoles.ADMINISTRADOR])
   empresaOrAdmin(@ActiveUser() user) {
     return {
       message: 'Usuarios empresa o administradores pueden acceder',

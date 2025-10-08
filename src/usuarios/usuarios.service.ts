@@ -213,9 +213,23 @@ export class UsuariosService {
     return token?.value || null;
   }
 
-  async getUserRoles(id: string): Promise<string[]> {
-    const usuario = await this.findOne(id);
-    return usuario.usuarioRoles.map((ur) => ur.role.name).filter(Boolean);
+  async getUserRoles(userId: string): Promise<string[]> {
+    const usuario = await this.prismaService.usuario.findUnique({
+      where: { id: userId },
+      include: {
+        usuarioRoles: {
+          include: {
+            role: true,
+          },
+        },
+      },
+    });
+
+    if (!usuario) {
+      return [];
+    }
+
+    return usuario.usuarioRoles.map((ur) => ur.role.name);
   }
 
   async assignRole(userId: string, roleId: string) {
