@@ -206,7 +206,35 @@ npm run test:cov
 
 # Tests en modo debug
 npm run test:debug
+
+# Tests de stress con Artillery
+npm run test:stress
+
+# Tests de stress con reporte HTML
+npm run test:stress:report
 ```
+
+### 🔥 Tests de Stress
+
+El proyecto incluye tests de stress automatizados con **Artillery v1.7.9**:
+
+```bash
+# Ejecutar tests de stress (requiere aplicación corriendo)
+npm run test:stress
+
+# Generar reporte HTML detallado
+npm run test:stress:report
+
+# Ver reporte generado
+open artillery-report.html
+```
+
+**Características de los tests:**
+- **5 fases** de carga: warmup, normal, stress, peak, cooldown
+- **4 escenarios** diferentes: público, auth, roles, mixto
+- **Métricas completas**: latencia, throughput, errores
+- **Reportes HTML**: Dashboards interactivos descargables
+- **CI/CD integrado**: Ejecutión automática en GitHub Actions
 
 ### 🚀 Comandos de Inicio Rápido
 

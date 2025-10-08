@@ -2,7 +2,7 @@ name: 🚀 Build, Test & Deploy SIBNE Backend
 
 on:
   push:
-    branches: [main]
+    branches: [main, development]
   pull_request:
     branches: [main]
 
@@ -11,13 +11,13 @@ env:
   IMAGE_NAME: lebateleur/sibne-backend
 
 jobs:
-  test:
-    name: 🧪 Run Tests
+  test-build-deploy:
+    name: 🧪 Test, Build & Deploy
     runs-on: ubuntu-latest
 
     services:
       postgres:
-        image: postgres:17
+        image: postgres:15
         env:
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
           POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
@@ -43,12 +43,12 @@ jobs:
       - name: 📦 Install dependencies
         run: npm ci
 
-      - name: � Install PostgreSQL client
+      - name: 🐘 Install PostgreSQL client
         run: |
           sudo apt-get update
           sudo apt-get install -y postgresql-client
 
-      - name: �🔧 Generate Prisma Client
+      - name: 🔧 Generate Prisma Client
         run: npx prisma generate
 
       - name: 🗄️ Load database backup
@@ -59,7 +59,7 @@ jobs:
             sleep 2
           done
 
-          # Cargar el backup específico directamente con psql (sin Docker)
+          # Cargar el backup específico directamente con psql
           echo "📂 Cargando backup de la base de datos..."
           PGPASSWORD=${{ secrets.POSTGRES_PASSWORD }} psql \
             -h localhost \
@@ -75,7 +75,6 @@ jobs:
 
       - name: 🧪 Run unit tests
         run: npm run test
-
         env:
           DATABASE_URL: postgresql://${{ secrets.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@localhost:5432/${{ secrets.POSTGRES_DB }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
@@ -86,37 +85,89 @@ jobs:
         with:
           file: ./coverage/lcov.info
 
-  build-and-push:
-    name: 🐳 Build & Push Docker Image
-    needs: test
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push'
+      - name: ⚡ Install Artillery for stress testing
+        run: |
+          # Instalar Artillery v1.7.9 (última versión con soporte HTML nativo)
+          npm install -g artillery@1.7.9
 
-    steps:
-      - name: 📥 Checkout code
-        uses: actions/checkout@v4
+      - name: 🚀 Start application for stress testing
+        run: |
+          # Iniciar la aplicación en background
+          npm run start &
+          echo $! > app.pid
+          
+          # Esperar a que la aplicación esté lista
+          echo "Esperando que la aplicación inicie..."
+          for i in {1..30}; do
+            if curl -s http://localhost:3000/api/test/public > /dev/null; then
+              echo "✅ Aplicación iniciada correctamente"
+              break
+            fi
+            sleep 2
+          done
+        env:
+          DATABASE_URL: postgresql://${{ secrets.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@localhost:5432/${{ secrets.POSTGRES_DB }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          NODE_ENV: test
 
+      - name: 🔥 Run Artillery stress tests
+        run: |
+          # Crear directorio para reportes
+          mkdir -p artillery-reports
+          
+          # Ejecutar tests de stress y generar reporte HTML
+          artillery run \
+            --output artillery-reports/artillery-report.json \
+            test/artillery/stress-test.yml || echo "Stress tests completed with warnings"
+          
+          # Generar reporte HTML desde JSON
+          artillery report \
+            --output artillery-reports/artillery-report.html \
+            artillery-reports/artillery-report.json || echo "HTML report generated with warnings"
+        continue-on-error: true
+
+      - name: 🛑 Stop application
+        if: always()
+        run: |
+          # Detener la aplicación
+          if [ -f app.pid ]; then
+            kill $(cat app.pid) || echo "Application already stopped"
+            rm app.pid
+          fi
+
+      - name: 📈 Upload Artillery reports as artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: artillery-stress-test-reports
+          path: |
+            artillery-reports/
+          retention-days: 30
+
+      # Docker Build & Push (solo en push, no en PR)
       - name: 🏗️ Set up Docker Buildx
+        if: github.event_name == 'push'
         uses: docker/setup-buildx-action@v3
 
       - name: 🔐 Login to DockerHub
+        if: github.event_name == 'push'
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: 🏷️ Extract metadata
+        if: github.event_name == 'push'
         id: meta
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.IMAGE_NAME }}
           tags: |
-            type=ref,event=branch
-            type=ref,event=pr
             type=sha,prefix={{branch}}-
             type=raw,value=latest,enable={{is_default_branch}}
 
       - name: 🚀 Build and push Docker image
+        if: github.event_name == 'push'
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -127,29 +178,24 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      - name: 🔍 Run Trivy vulnerability scanner
+        if: github.event_name == 'push'
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: '${{ env.IMAGE_NAME }}:latest'
+          format: 'table'
+          output: 'trivy-results.txt'
+
       - name: 📝 Create deployment summary
+        if: github.event_name == 'push'
         run: |
           echo "## 🚀 Deployment Summary" >> $GITHUB_STEP_SUMMARY
           echo "- **Image**: \`${{ env.IMAGE_NAME }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- **Tags**: \`${{ steps.meta.outputs.tags }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- **Commit**: \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- **Branch**: \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
-
-  security-scan:
-    name: 🔒 Security Scan
-    needs: build-and-push
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push'
-
-    steps:
-      - name: 🔍 Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: '${{ env.IMAGE_NAME }}:latest'
-          format: 'sarif'
-          output: 'trivy-results.sarif'
-
-      - name: 📋 Upload Trivy scan results
-        uses: github/codeql-action/upload-sarif@v2
-        with:
-          sarif_file: 'trivy-results.sarif'
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## � Security Scan Results" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          cat trivy-results.txt >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY

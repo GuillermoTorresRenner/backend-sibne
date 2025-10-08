@@ -1,0 +1,147 @@
+config:
+  target: "http://localhost:3000"
+  phases:
+    # Fase de calentamiento - aumentar gradualmente
+    - duration: 60
+      arrivalRate: 5
+      name: "Warmup phase"
+    
+    # Fase de carga normal - mantener carga constante
+    - duration: 120
+      arrivalRate: 10
+      name: "Normal load phase"
+    
+    # Fase de stress - incrementar significativamente
+    - duration: 180
+      arrivalRate: 25
+      name: "Stress phase"
+    
+    # Fase de pico - máxima carga
+    - duration: 60
+      arrivalRate: 50
+      name: "Peak load phase"
+    
+    # Fase de enfriamiento - reducir gradualmente
+    - duration: 60
+      arrivalRate: 5
+      name: "Cooldown phase"
+
+  # Configuración de timeouts y headers
+  http:
+    timeout: 10
+    pool: 10
+  
+  # Variables de entorno para el test
+  variables:
+    adminUser: "pvd"
+    adminPassword: "BNE_MENDPEDS2024"
+    empresaUser: "00327"
+    empresaPassword: "jo091"
+
+  # Plugins para métricas adicionales
+  plugins:
+    expect: {}
+    metrics-by-endpoint: {}
+
+scenarios:
+  # Escenario 1: Endpoints públicos (sin autenticación)
+  - name: "Public endpoints"
+    weight: 30
+    flow:
+      - get:
+          url: "/api/test/public"
+          expect:
+            - statusCode: 200
+            - hasProperty: "message"
+      
+      - think: 1
+
+  # Escenario 2: Login y endpoints protegidos básicos
+  - name: "Authentication flow"
+    weight: 40
+    flow:
+      # Login como administrador
+      - post:
+          url: "/api/auth/login"
+          json:
+            userName: "{{ adminUser }}"
+            password: "{{ adminPassword }}"
+          capture:
+            - json: "$.accessToken"
+              as: "authToken"
+          expect:
+            - statusCode: 200
+            - hasProperty: "accessToken"
+      
+      - think: 2
+      
+      # Acceder a endpoint protegido
+      - get:
+          url: "/api/test/protected"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          expect:
+            - statusCode: 200
+            - hasProperty: "user"
+      
+      - think: 1
+
+  # Escenario 3: Tests de autorización por roles
+  - name: "Role-based access"
+    weight: 20
+    flow:
+      # Login como usuario empresa
+      - post:
+          url: "/api/auth/login"
+          json:
+            userName: "{{ empresaUser }}"
+            password: "{{ empresaPassword }}"
+          capture:
+            - json: "$.accessToken"
+              as: "empresaToken"
+          expect:
+            - statusCode: 200
+      
+      - think: 1
+      
+      # Acceder a endpoint de empresa
+      - get:
+          url: "/api/test/empresa-only"
+          headers:
+            Authorization: "Bearer {{ empresaToken }}"
+          expect:
+            - statusCode: 200
+      
+      # Intentar acceder a endpoint de admin (debería fallar)
+      - get:
+          url: "/api/test/admin-only"
+          headers:
+            Authorization: "Bearer {{ empresaToken }}"
+          expect:
+            - statusCode: 401
+
+  # Escenario 4: Stress en múltiples endpoints simultáneamente
+  - name: "Mixed load"
+    weight: 10
+    flow:
+      # Alternar entre diferentes endpoints
+      - get:
+          url: "/api/test/public"
+      
+      - think: 0.5
+      
+      - post:
+          url: "/api/auth/login"
+          json:
+            userName: "{{ adminUser }}"
+            password: "{{ adminPassword }}"
+          capture:
+            - json: "$.accessToken"
+              as: "mixedToken"
+      
+      - think: 0.5
+      
+      - get:
+          url: "/api/test/user-or-admin"
+          headers:
+            Authorization: "Bearer {{ mixedToken }}"

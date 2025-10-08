@@ -23,7 +23,9 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "test:stress": "artillery run test/artillery/stress-test.yml",
+    "test:stress:report": "artillery run --output artillery-report.json test/artillery/stress-test.yml && artillery report --output artillery-report.html artillery-report.json"
   },
   "dependencies": {
     "@nestjs/common": "^11.1.6",
@@ -48,6 +50,7 @@
     "@types/cookie-parser": "^1.4.9",
     "@types/express": "^5.0.3",
     "@types/jest": "^30.0.0",
+    "artillery": "^1.7.9",
     "@types/moment": "^2.11.29",
     "@types/multer": "^2.0.0",
     "@types/node": "^24.3.0",
