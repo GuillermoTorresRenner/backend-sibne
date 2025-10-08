@@ -87,15 +87,15 @@ jobs:
 
       - name: ⚡ Install Artillery for stress testing
         run: |
-          # Instalar Artillery v1.7.9 (última versión con soporte HTML nativo)
-          npm install -g artillery@1.7.9
+          # Instalar Artillery v2.0.26 (versión más reciente)
+          npm install -g artillery@latest
 
       - name: 🚀 Start application for stress testing
         run: |
           # Iniciar la aplicación en background
           npm run start &
           echo $! > app.pid
-          
+
           # Esperar a que la aplicación esté lista
           echo "Esperando que la aplicación inicie..."
           for i in {1..30}; do
@@ -114,12 +114,12 @@ jobs:
         run: |
           # Crear directorio para reportes
           mkdir -p artillery-reports
-          
+
           # Ejecutar tests de stress y generar reporte HTML
           artillery run \
             --output artillery-reports/artillery-report.json \
             test/artillery/stress-test.yml || echo "Stress tests completed with warnings"
-          
+
           # Generar reporte HTML desde JSON
           artillery report \
             --output artillery-reports/artillery-report.html \

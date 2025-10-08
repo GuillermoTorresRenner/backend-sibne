@@ -216,7 +216,7 @@ npm run test:stress:report
 
 ### 🔥 Tests de Stress
 
-El proyecto incluye tests de stress automatizados con **Artillery v1.7.9**:
+El proyecto incluye tests de stress automatizados con **Artillery v2.0.26**:
 
 ```bash
 # Ejecutar tests de stress (requiere aplicación corriendo)
@@ -230,7 +230,9 @@ open artillery-report.html
 ```
 
 **Características de los tests:**
-- **5 fases** de carga: warmup, normal, stress, peak, cooldown
+
+- **⏱️ Duración optimizada**: 3 minutos total (180 segundos)
+- **4 fases** de carga: warmup (30s), normal (60s), stress (60s), peak (30s)
 - **4 escenarios** diferentes: público, auth, roles, mixto
 - **Métricas completas**: latencia, throughput, errores
 - **Reportes HTML**: Dashboards interactivos descargables
