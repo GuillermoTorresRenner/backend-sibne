@@ -2,7 +2,7 @@ name: 🚀 Build, Test & Deploy SIBNE Backend
 
 on:
   push:
-    branches: [main, development]
+    branches: [main]
   pull_request:
     branches: [main]
 
@@ -62,35 +62,118 @@ jobs:
           DATABASE_URL: postgresql://${{ secrets.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@localhost:5432/${{ secrets.POSTGRES_DB }}
 
       - name: 🔥 Run Artillery stress tests
+        env:
+          DATABASE_URL: postgresql://${{ secrets.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@localhost:5432/${{ secrets.POSTGRES_DB }}
         run: |
+          # Crear directorio para reportes
           mkdir -p artillery-reports
+
+          # Instalar Artillery v2.0.26 (versión más reciente)
           npm install -g artillery@latest
-          npm run start:dev &
-          echo $! > app.pid
-          echo "Esperando que la aplicación esté lista..."
-          for i in {1..30}; do
-            if curl -f http://localhost:3000/api/test/public > /dev/null 2>&1; then
-              echo "✅ Aplicación lista en el intento $i"
+
+          # Verificar que la base de datos esté disponible
+          echo "🗄️ Verificando conexión a la base de datos..."
+          PGPASSWORD=${{ secrets.POSTGRES_PASSWORD }} psql \
+            -h localhost \
+            -U ${{ secrets.POSTGRES_USER }} \
+            -d ${{ secrets.POSTGRES_DB }} \
+            -c "SELECT 1;" > /dev/null
+
+          # Configurar variables de entorno para la aplicación
+          export DATABASE_URL="postgresql://${{ secrets.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@localhost:5432/${{ secrets.POSTGRES_DB }}"
+          export NODE_ENV=test
+          export PORT=3000
+
+          # Iniciar la aplicación en background con logs
+          echo "🚀 Iniciando aplicación NestJS..."
+          npm run start:dev > app.log 2>&1 &
+          APP_PID=$!
+          echo $APP_PID > app.pid
+
+          # Esperar que la aplicación esté lista con mejor timeout
+          echo "⏳ Esperando que la aplicación esté lista..."
+          APP_READY=false
+          for i in {1..60}; do
+            if curl -f -s http://localhost:3000/api/test/public > /dev/null 2>&1; then
+              echo "✅ Aplicación lista después de $((i * 2)) segundos"
+              APP_READY=true
               break
             fi
-            echo "⏳ Esperando... intento $i/30"
+            if ! kill -0 $APP_PID 2>/dev/null; then
+              echo "❌ La aplicación se detuvo inesperadamente"
+              echo "📋 Últimas líneas del log:"
+              tail -20 app.log
+              exit 1
+            fi
+            echo "⏳ Esperando... intento $i/60 ($(($i * 2))s)"
             sleep 2
           done
-          echo "🔥 Iniciando tests de stress de 3 minutos..."
+
+          if [ "$APP_READY" = false ]; then
+            echo "❌ Timeout: La aplicación no respondió después de 2 minutos"
+            echo "� Log completo de la aplicación:"
+            cat app.log
+            kill $APP_PID || true
+            exit 1
+          fi
+
+          # Verificar endpoints críticos antes de Artillery
+          echo "🔍 Verificando endpoints críticos..."
+          curl -f http://localhost:3000/api/test/public || (echo "❌ Endpoint público falló"; exit 1)
+
+          # Ejecutar tests de stress (3 minutos)
+          echo "�🔥 Iniciando tests de stress de 3 minutos..."
           artillery run \
             --output artillery-reports/artillery-report.json \
-            test/artillery/stress-test.yml || echo "Stress tests completed with warnings"
-          artillery report \
-            --output artillery-reports/artillery-report.html \
-            artillery-reports/artillery-report.json || echo "HTML report generated with warnings"
+            test/artillery/stress-test.yml || echo "⚠️ Stress tests completed with warnings"
+
+          # Generar reporte HTML desde JSON
+          if [ -f artillery-reports/artillery-report.json ]; then
+            artillery report \
+              --output artillery-reports/artillery-report.html \
+              artillery-reports/artillery-report.json || echo "⚠️ HTML report generated with warnings"
+            echo "✅ Reportes de Artillery generados exitosamente"
+          else
+            echo "❌ No se generó el reporte JSON de Artillery"
+          fi
         continue-on-error: true
 
       - name: 🛑 Stop application
         if: always()
         run: |
+          echo "🛑 Deteniendo aplicación..."
           if [ -f app.pid ]; then
-            kill $(cat app.pid) || echo "Application already stopped"
+            APP_PID=$(cat app.pid)
+            echo "📋 Deteniendo proceso $APP_PID"
+            
+            # Intentar detener gracefully
+            kill $APP_PID 2>/dev/null || echo "⚠️ Proceso ya detenido"
+            
+            # Esperar a que se detenga
+            for i in {1..10}; do
+              if ! kill -0 $APP_PID 2>/dev/null; then
+                echo "✅ Aplicación detenida exitosamente"
+                break
+              fi
+              echo "⏳ Esperando que la aplicación se detenga... ($i/10)"
+              sleep 1
+            done
+            
+            # Force kill si aún está corriendo
+            if kill -0 $APP_PID 2>/dev/null; then
+              echo "🔪 Forzando detención de la aplicación"
+              kill -9 $APP_PID 2>/dev/null || true
+            fi
+            
             rm app.pid
+          else
+            echo "📝 No se encontró archivo app.pid"
+          fi
+
+          # Mostrar últimas líneas del log si existe
+          if [ -f app.log ]; then
+            echo "📋 Últimas 10 líneas del log de la aplicación:"
+            tail -10 app.log
           fi
 
       - name: 📈 Upload Artillery reports as artifacts

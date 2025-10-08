@@ -1,5 +1,5 @@
-# Usar Node.js 18 LTS como imagen base
-FROM node:18-alpine AS base
+# Usar Node.js 22 LTS como imagen base
+FROM node:22-alpine AS base
 
 # Instalar dependencias del sistema necesarias para Prisma y bcrypt
 RUN apk add --no-cache \
@@ -31,7 +31,7 @@ RUN npx prisma generate
 RUN npm run build
 
 # Etapa de producción
-FROM node:18-alpine AS production
+FROM node:22-alpine AS production
 
 # Instalar dependencias del sistema para producción
 RUN apk add --no-cache openssl libc6-compat
