@@ -48,79 +48,38 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y postgresql-client
 
-      - name: 🔧 Generate Prisma Client
-        run: npx prisma generate
-
       - name: 🗄️ Load database backup
         run: |
-          # Esperar a que PostgreSQL esté completamente listo
-          until pg_isready -h localhost -p 5432 -U ${{ secrets.POSTGRES_USER }}; do
-            echo "Esperando PostgreSQL..."
-            sleep 2
-          done
-
-          # Cargar el backup específico directamente con psql
-          echo "📂 Cargando backup de la base de datos..."
           PGPASSWORD=${{ secrets.POSTGRES_PASSWORD }} psql \
             -h localhost \
             -U ${{ secrets.POSTGRES_USER }} \
             -d ${{ secrets.POSTGRES_DB }} \
             -f scripts/db_backups/backup_sibne_hashedPasswords_20251008_162640.sql
 
-          echo "✅ Backup cargado exitosamente"
-        env:
-          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
-          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
-
-      - name: 🧪 Run unit tests
+      - name: �� Run tests
         run: npm run test
         env:
           DATABASE_URL: postgresql://${{ secrets.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@localhost:5432/${{ secrets.POSTGRES_DB }}
-          JWT_SECRET: ${{ secrets.JWT_SECRET }}
-
-      - name: 📊 Upload coverage reports
-        uses: codecov/codecov-action@v3
-        if: success()
-        with:
-          file: ./coverage/lcov.info
-
-      - name: ⚡ Install Artillery for stress testing
-        run: |
-          # Instalar Artillery v2.0.26 (versión más reciente)
-          npm install -g artillery@latest
-
-      - name: 🚀 Start application for stress testing
-        run: |
-          # Iniciar la aplicación en background
-          npm run start &
-          echo $! > app.pid
-
-          # Esperar a que la aplicación esté lista
-          echo "Esperando que la aplicación inicie..."
-          for i in {1..30}; do
-            if curl -s http://localhost:3000/api/test/public > /dev/null; then
-              echo "✅ Aplicación iniciada correctamente"
-              break
-            fi
-            sleep 2
-          done
-        env:
-          DATABASE_URL: postgresql://${{ secrets.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@localhost:5432/${{ secrets.POSTGRES_DB }}
-          JWT_SECRET: ${{ secrets.JWT_SECRET }}
-          NODE_ENV: test
 
       - name: 🔥 Run Artillery stress tests
         run: |
-          # Crear directorio para reportes
           mkdir -p artillery-reports
-
-          # Ejecutar tests de stress y generar reporte HTML
+          npm install -g artillery@latest
+          npm run start:dev &
+          echo $! > app.pid
+          echo "Esperando que la aplicación esté lista..."
+          for i in {1..30}; do
+            if curl -f http://localhost:3000/api/test/public > /dev/null 2>&1; then
+              echo "✅ Aplicación lista en el intento $i"
+              break
+            fi
+            echo "⏳ Esperando... intento $i/30"
+            sleep 2
+          done
+          echo "🔥 Iniciando tests de stress de 3 minutos..."
           artillery run \
             --output artillery-reports/artillery-report.json \
             test/artillery/stress-test.yml || echo "Stress tests completed with warnings"
-
-          # Generar reporte HTML desde JSON
           artillery report \
             --output artillery-reports/artillery-report.html \
             artillery-reports/artillery-report.json || echo "HTML report generated with warnings"
@@ -129,7 +88,6 @@ jobs:
       - name: 🛑 Stop application
         if: always()
         run: |
-          # Detener la aplicación
           if [ -f app.pid ]; then
             kill $(cat app.pid) || echo "Application already stopped"
             rm app.pid
@@ -144,7 +102,6 @@ jobs:
             artillery-reports/
           retention-days: 30
 
-      # Docker Build & Push (solo en push, no en PR)
       - name: 🏗️ Set up Docker Buildx
         if: github.event_name == 'push'
         uses: docker/setup-buildx-action@v3
@@ -154,7 +111,7 @@ jobs:
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
       - name: 🏷️ Extract metadata
         if: github.event_name == 'push'
@@ -195,7 +152,7 @@ jobs:
           echo "- **Commit**: \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- **Branch**: \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "## � Security Scan Results" >> $GITHUB_STEP_SUMMARY
+          echo "## 🔒 Security Scan Results" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
           cat trivy-results.txt >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
