@@ -1,10 +1,8 @@
-// Este enum se mantiene para compatibilidad con decoradores
-// pero los roles reales vendrán de la base de datos
+// Roles reales de la base de datos
 export enum Roles {
-  ADMIN = 'ADMIN',
-  USER = 'USER',
-  SUPER_ADMIN = 'SUPER_ADMIN',
-  MODERATOR = 'MODERATOR',
+  ADMINISTRADOR = 'ADMINISTRADOR',
+  USUARIO = 'USUARIO',
+  USUARIO_EMPRESA = 'USUARIO EMPRESA',
 }
 
 // Función helper para validar roles dinámicos

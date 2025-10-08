@@ -7,7 +7,7 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
 import { UpdateUsuarioDto } from './dto/update-usuario.dto';
-import { LoginUsuario } from './dto/login-usuario.dto';
+import { LoginDto } from '../auth/dto/login.dto';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -111,7 +111,7 @@ export class UsuariosService {
     });
   }
 
-  async validateCredentials(loginDto: LoginUsuario) {
+  async validateCredentials(loginDto: LoginDto) {
     // Buscar por userName o email
     const usuario =
       (await this.findByUserName(loginDto.userName)) ||
@@ -122,7 +122,7 @@ export class UsuariosService {
     }
 
     const isValidPassword = await bcrypt.compare(
-      loginDto.passwordHash,
+      loginDto.password,
       usuario.passwordHash,
     );
     if (!isValidPassword) {

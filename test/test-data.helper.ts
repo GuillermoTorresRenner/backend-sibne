@@ -9,14 +9,14 @@ export class TestDataHelper {
    */
   async setupTestData() {
     // Crear roles
-    const userRole = await this.prismaService.role.upsert({
-      where: { id: 'user-role-test' },
+    const usuarioRole = await this.prismaService.role.upsert({
+      where: { id: 'usuario-role-test' },
       update: {},
       create: {
-        id: 'user-role-test',
-        name: 'USER',
-        normalizedName: 'USER',
-        concurrencyStamp: 'test-stamp-user',
+        id: 'usuario-role-test',
+        name: 'USUARIO',
+        normalizedName: 'USUARIO',
+        concurrencyStamp: 'test-stamp-usuario',
       },
     });
 
@@ -25,9 +25,20 @@ export class TestDataHelper {
       update: {},
       create: {
         id: 'admin-role-test',
-        name: 'ADMIN',
-        normalizedName: 'ADMIN',
+        name: 'ADMINISTRADOR',
+        normalizedName: 'ADMINISTRADOR',
         concurrencyStamp: 'test-stamp-admin',
+      },
+    });
+
+    const empresaRole = await this.prismaService.role.upsert({
+      where: { id: 'empresa-role-test' },
+      update: {},
+      create: {
+        id: 'empresa-role-test',
+        name: 'USUARIO EMPRESA',
+        normalizedName: 'USUARIO EMPRESA',
+        concurrencyStamp: 'test-stamp-empresa',
       },
     });
 
@@ -81,13 +92,13 @@ export class TestDataHelper {
       where: {
         userId_roleId: {
           userId: testUser.id,
-          roleId: userRole.id,
+          roleId: usuarioRole.id,
         },
       },
       update: {},
       create: {
         userId: testUser.id,
-        roleId: userRole.id,
+        roleId: usuarioRole.id,
       },
     });
 
@@ -107,6 +118,7 @@ export class TestDataHelper {
 
     return {
       users: { testUser, adminUser },
+      roles: { usuarioRole, adminRole, empresaRole },
       roles: { userRole, adminRole },
     };
   }

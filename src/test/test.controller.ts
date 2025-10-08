@@ -22,7 +22,7 @@ export class TestController {
   }
 
   @Get('admin-only')
-  @Auth(['ADMIN'])
+  @Auth(['ADMINISTRADOR'])
   adminOnly(@ActiveUser() user) {
     return {
       message: 'Solo administradores pueden acceder',
@@ -31,10 +31,28 @@ export class TestController {
   }
 
   @Get('user-or-admin')
-  @Auth(['USER', 'ADMIN'])
+  @Auth(['USUARIO', 'ADMINISTRADOR'])
   userOrAdmin(@ActiveUser() user) {
     return {
       message: 'Usuarios o administradores pueden acceder',
+      user: user,
+    };
+  }
+
+  @Get('empresa-only')
+  @Auth(['USUARIO EMPRESA'])
+  empresaOnly(@ActiveUser() user) {
+    return {
+      message: 'Solo usuarios empresa pueden acceder',
+      user: user,
+    };
+  }
+
+  @Get('empresa-or-admin')
+  @Auth(['USUARIO EMPRESA', 'ADMINISTRADOR'])
+  empresaOrAdmin(@ActiveUser() user) {
+    return {
+      message: 'Usuarios empresa o administradores pueden acceder',
       user: user,
     };
   }

@@ -5,7 +5,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { UsuariosService } from '../usuarios/usuarios.service';
-import { LoginUsuario } from '../usuarios/dto/login-usuario.dto';
+import { LoginDto } from './dto/login.dto';
 import { JwtService } from '@nestjs/jwt';
 import { CreateUsuarioDto } from '../usuarios/dto/create-usuario.dto';
 
@@ -16,7 +16,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  async login(loginDto: LoginUsuario) {
+  async login(loginDto: LoginDto) {
     const usuario = await this.usuariosService.validateCredentials(loginDto);
 
     // Obtener roles del usuario

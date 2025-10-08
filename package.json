@@ -7,7 +7,7 @@
   "license": "UNLICENSED",
   "scripts": {
     "seed": "ts-node prisma/seed.ts",
-    "passwords:encrypt": "ts-node scripts/encrypt-passwords.ts",
+    "passwords:encrypt": "ts-node scripts/encrypt-passwords.ts --encrypt",
     "passwords:check": "ts-node scripts/encrypt-passwords.ts --verify-only",
     "db:backup": "bash scripts/backup_db.sh",
     "db:restore": "bash scripts/restore_db.sh",

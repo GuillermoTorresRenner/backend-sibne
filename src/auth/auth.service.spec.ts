@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { AuthService } from './auth.service';
 import { UsuariosService } from '../usuarios/usuarios.service';
 import { JwtService } from '@nestjs/jwt';
-import { LoginUsuario } from '../usuarios/dto/login-usuario.dto';
+import { LoginDto } from './dto/login.dto';
 import { CreateUsuarioDto } from '../usuarios/dto/create-usuario.dto';
 
 const mockUsuariosService = {
@@ -54,9 +54,9 @@ describe('AuthService', () => {
 
       const mockRoles = ['USER'];
 
-      const loginDto: LoginUsuario = {
+      const loginDto: LoginDto = {
         userName: 'testuser',
-        passwordHash: 'plainpassword',
+        password: 'testpassword123',
       };
 
       mockUsuariosService.validateCredentials.mockResolvedValue(mockUsuario);

@@ -11,13 +11,22 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { LoginUsuario } from '../usuarios/dto/login-usuario.dto';
+import { LoginDto } from './dto/login.dto';
 import { CreateUsuarioDto } from '../usuarios/dto/create-usuario.dto';
 import { AuthGuard } from './guards/auth.guard';
 import { UsuariosService } from '../usuarios/usuarios.service';
 import { ActiveUser } from './decorators/activeUser.decorator';
 import { ApiBearerAuth } from '@nestjs/swagger';
 
+/**
+ * @UseGuards(AuthGuard) - Verificar Login Para verificar que el usuario esté logueado:
+ 
+ *@Role(['ADMIN']) - Control de Roles Para controlar acceso por roles específicos:
+
+ *@Auth(['ROLE']) - Decorador Combinado Un decorador que combina autenticación y roles:
+
+ *@ActiveUser() - Información del Usuario Para acceder a los datos del usuario autenticado:
+ */
 @Controller('auth')
 export class AuthController {
   constructor(
@@ -45,7 +54,7 @@ export class AuthController {
   }
 
   @Post('login')
-  async login(@Body() loginDto: LoginUsuario, @Req() req, @Res() res) {
+  async login(@Body() loginDto: LoginDto, @Req() req, @Res() res) {
     try {
       const result = await this.authService.login(loginDto);
 
