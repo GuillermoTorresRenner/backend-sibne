@@ -1,0 +1,40 @@
+# Configuración de Traefik
+api:
+  dashboard: true
+  insecure: true
+
+entryPoints:
+  web:
+    address: ":80"
+    http:
+      redirections:
+        entrypoint:
+          to: websecure
+          scheme: https
+  websecure:
+    address: ":443"
+
+providers:
+  docker:
+    exposedByDefault: false
+    network: backend-sibne_custom_network
+
+certificatesResolvers:
+  letsencrypt:
+    acme:
+      email: admin@tchile.com
+      storage: /certs/acme.json
+      tlsChallenge: {}
+      caServer: https://acme-v02.api.letsencrypt.org/directory
+
+# Configuración de logs
+log:
+  level: INFO
+
+accessLog: {}
+
+# Configuración de métricas (opcional)
+metrics:
+  prometheus:
+    addEntryPointsLabels: true
+    addServicesLabels: true
