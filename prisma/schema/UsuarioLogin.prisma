@@ -1,12 +1,10 @@
 //REVISADO - Estructura basada en AspNetUserLogins
 model UsuarioLogin {
-  loginProvider         String
-  providerKey           String
-  providerDisplayName   String?
-  userId                String
-  
+  id                  String  @id @default(cuid())
+  loginProvider       String
+  providerKey         String
+  providerDisplayName String?
+  userId              String
+
   // Relación con Usuario
-  usuario               Usuario @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  @@id([loginProvider, providerKey])
 }
