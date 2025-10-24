@@ -6,6 +6,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { MulterModule } from '@nestjs/platform-express';
 import { RolesModule } from './roles/roles.module';
 import { ContactosModule } from './contactos/contactos.module';
+import { TestModule } from './test/test.module';
 
 @Module({
   imports: [
@@ -14,8 +15,9 @@ import { ContactosModule } from './contactos/contactos.module';
     MulterModule.register({
       dest: './uploads',
     }),
-    RolesModule,
-    ContactosModule,
+  RolesModule,
+  ContactosModule,
+  TestModule,
   ],
   controllers: [],
   providers: [PrismaService],

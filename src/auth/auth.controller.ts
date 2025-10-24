@@ -12,6 +12,7 @@ import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { AuthGuard } from './guards/auth.guard';
 import { ApiBearerAuth } from '@nestjs/swagger';
+import { ActiveUser } from './decorators/activeUser.decorator';
 
 /**
  * @UseGuards(AuthGuard) - Verificar Login Para verificar que el usuario esté logueado:
@@ -101,7 +102,20 @@ export class AuthController {
     }
   }
 
-
-
+@UseGuards(AuthGuard)
+@Get('me')
+async me(@ActiveUser() user) {
+  if (!user || !user.usuario) {
+    return { message: 'No autenticado' };
+  }
+  return {
+    id: user.usuario.id,
+    nombre: user.usuario.nombre,
+    email: user.usuario.email,
+    cargo: user.usuario.cargo,
+    telefono: user.usuario.telefono,
+    role: user.role,  
+  };
+}
 
 }
