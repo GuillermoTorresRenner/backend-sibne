@@ -4,6 +4,7 @@ model ContactoLogin {
   contactoId    Int
   contactos     Contacto       @relation(fields: [contactoId], references: [id])
   loginProvider LoginProviders
+  fechaIngreso  DateTime       @default(now())
 
   // Relación con Contacto
   @@map("ContactoLogin")
