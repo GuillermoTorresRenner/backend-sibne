@@ -7,6 +7,7 @@ import { MulterModule } from '@nestjs/platform-express';
 import { UsuariosModule } from './usuarios/usuarios.module';
 import { RolesModule } from './roles/roles.module';
 import { TestModule } from './test/test.module';
+import { ContactosModule } from './contactos/contactos.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { TestModule } from './test/test.module';
     UsuariosModule,
     RolesModule,
     TestModule,
+    ContactosModule,
   ],
   controllers: [],
   providers: [PrismaService],
