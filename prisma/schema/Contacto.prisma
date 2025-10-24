@@ -1,17 +1,23 @@
 //REVISADO
 model Contacto {
-  id                Int    @id @default(autoincrement())
+  id                Int             @id @default(autoincrement())
   nombre            String
   cargo             String
   email             String
   telefono          String
   rut               Int
   digitoVerificador String
+  password          String?
   empresaId         String
+  empresa           Empresa         @relation(fields: [empresaId], references: [id])
   tipoContactoId    Int
-
-  tipoContacto      TipoContacto @relation(fields: [tipoContactoId], references: [id])
-  empresa           Empresa      @relation(fields: [empresaId], references: [id])
+  tipoContacto      TipoContacto    @relation(fields: [tipoContactoId], references: [id])
+  roleId            String?         @default("cb226eb3-bfd1-4772-8463-ebb062d1b870")
+  role              Role?           @relation(fields: [roleId], references: [id])
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime?       @updatedAt
+  contactoLogins    ContactoLogin[]
+  emailLogs         EmailLogs[]
 
   @@map("Contacto")
 }

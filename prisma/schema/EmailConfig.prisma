@@ -1,17 +1,16 @@
 //REVISADO
 model EmailConfig {
-  id                  Int          @id @default(autoincrement())
-  nombre              String
-  descripcion         String
-  asunto              String
-  plantilla           String
-  estadoEmailId       Int
+  id                   Int                  @id @default(autoincrement())
+  nombre               String
+  descripcion          String
+  asunto               String
+  plantilla            String
   fechaGeneracionEnvio DateTime?
-  encuestaId          Int?
-  listaEmpresas       String
-
-  estadoEmail         EstadoEmail  @relation(fields: [estadoEmailId], references: [id])
-  emailLogs           EmailLogs[]
+  encuestaId           Int?
+  listaEmpresasEmail   ListaEmpresasEmail[]
+  emailLogs            EmailLogs[]
+  estadoEmailId        Int
+  estadoEmail          EstadoEmail          @relation(fields: [estadoEmailId], references: [id])
 
   @@map("EmailConfig")
 }

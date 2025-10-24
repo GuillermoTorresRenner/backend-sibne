@@ -1,0 +1,9 @@
+model ListaEmpresasEmail {
+    id            Int         @id @default(autoincrement())
+    empresaId     String
+    empresa       Empresa     @relation(fields: [empresaId], references: [id])
+    emailConfigId Int
+    emailConfig   EmailConfig @relation(fields: [emailConfigId], references: [id])
+
+    @@map("ListaEmpresasEmail")
+}

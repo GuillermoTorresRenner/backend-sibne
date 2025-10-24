@@ -1,13 +1,11 @@
 //REVISADO
 model Comuna {
-  id         Int     @id @default(autoincrement())
+  id          Int       @id @default(autoincrement())
+  nombre      String
   provinciaId Int
-  regionId   Int
-  nombre     String
-  Old_Id     Int?    // Campo legacy para migración
-
-  region     Region  @relation(fields: [regionId], references: [id])
-  plantas    Planta[]
+  provincia   Provincia @relation(fields: [provinciaId], references: [id])
+  Old_Id      Int? // Campo legacy para migración
+  plantas     Planta[]
 
   @@map("Comuna")
 }

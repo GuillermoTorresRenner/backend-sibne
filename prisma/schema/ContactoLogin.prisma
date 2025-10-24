@@ -1,0 +1,15 @@
+//REVISADO - Estructura basada en AspNetUserLogins
+model ContactoLogin {
+  id            String         @id @default(cuid())
+  contactoId    Int
+  contactos     Contacto       @relation(fields: [contactoId], references: [id])
+  loginProvider LoginProviders
+
+  // Relación con Contacto
+  @@map("ContactoLogin")
+}
+
+enum LoginProviders {
+  EMAIL_Y_PASSWORD
+  CLAVE_UNICA
+}

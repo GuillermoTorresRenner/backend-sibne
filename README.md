@@ -374,3 +374,41 @@ Ver `TESTING_SUMMARY.md` para detalles completos.
 - [JWT.io](https://jwt.io/) - JSON Web Token information
 
 ---
+# Cambios efectivos realizados en el modelo de la base de datos.
+## Eliminaciones de tablas:
+1. Eliminación de la tabla **CargaMasivaArchivo**
+2. Eliminación de la tabla **CargaMasivaDetalle**
+3. Eliminación de la tabla **CargaMasivaError**
+4. Eliminación de la tabla **Usuario**
+5. Eliminación de la tabla **UsuarioRole**
+6. Eliminación de la tabla **UsuarioToken**
+7. Eliminación de la tabla **EstadoReportes**
+7. Eliminación de la tabla **Reportes**
+
+## Modificaciones en tablas existentes:
+1. Reestructuración de las relaciones entre las tablas:
+  - **Comuna**
+  - **Provincia**
+  - **Region**
+2. Se agrega el campo password a la tabla de **Contacto** y se relaciona con la tabla **Role** y **EmailLog**.
+3. Se cambia el nombre de la tabla **UsuarioLogin** a **ContactoLogin**. Se relaciona con la tabla **Contacto** y el Enum **LoginProviders**.
+4. Se elimina la relación de **EmailConfig** y **EmailLogs**. Se relaciona esta tabla con la tabla **ListaEmpresasEmail**. También se elimina la relación con **EstadoEmail**.
+5. **EmailLogs**
+  - **Eliminación de campos:** Se eliminaron los campos `fechaHoraRegistro`, `estado`, `para`, `msje` y `empresaId`.  
+    _Comentario:_ Estos datos ya no serán almacenados en la tabla. Si necesitas conservarlos, deberás migrarlos a otra estructura o descartarlos.
+  - **Eliminación de relación con Empresa:** Se eliminó la relación directa con la tabla **Empresa** (`empresaId` y el campo relacional `empresa`).  
+    _Comentario:_ Ahora los logs de email no están ligados directamente a una empresa, sino a un contacto.
+  - **Adición de relación con Contacto:** Se agregó la relación con la tabla **Contacto** mediante el campo `contactoId` y el objeto relacional `contacto`.  
+    _Comentario:_ Cada log de email puede estar asociado a un contacto específico, permitiendo trazabilidad a nivel de usuario/contacto.
+  - **Adición de relación con EstadoEmail:** Se agregó la relación con la tabla **EstadoEmail** mediante el campo `estadoEmailId` y el objeto relacional `estadoEmail`.  
+    _Comentario:_ El estado del email ahora se gestiona mediante una tabla relacional, permitiendo mayor flexibilidad y normalización de los estados posibles.
+  - **Eliminación de campos de mensaje y destinatario:** Se eliminaron los campos `para` (destinatario) y `msje` (mensaje).  
+    _Comentario:_ Si estos datos son necesarios, deben migrarse a otra tabla o estructura antes de aplicar la migración.
+  - **Renombramiento y simplificación de campos de fecha:** Se eliminó `fechaHoraRegistro` y se mantuvo solo `fechaHoraEnvio`.  
+    _Comentario:_ Solo se conserva la fecha de envío del email, simplificando la trazabilidad temporal.
+
+
+
+## Creaciones de tablas nuevas:
+1. Se crea el Enum **LoginProviders** para la tabla **ContactoLogin**. 
+2. Se crea la tabla **ListaEmpresasEmail** para relacionar las empresas con las configuraciones de email.

@@ -1,11 +1,10 @@
 //REVISADO
 model CategoriaTransaccion {
-  id           Int        @id @default(autoincrement())
-  nombre       String
-  categoria    String
-  formularioId Int
-
-  formulario   Formulario @relation(fields: [formularioId], references: [id])
+  id            Int           @id @default(autoincrement())
+  nombre        String
+  categoria     String
+  formularioId  Int
+  formulario    Formulario    @relation(fields: [formularioId], references: [id])
   transacciones Transaccion[]
 
   @@map("CategoriaTransaccion")
