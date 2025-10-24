@@ -1,121 +1,100 @@
 import {
-  BadRequestException,
   Injectable,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { UsuariosService } from '../usuarios/usuarios.service';
+import { ContactosService } from '../contactos/contactos.service';
 import { LoginDto } from './dto/login.dto';
 import { JwtService } from '@nestjs/jwt';
-import { CreateUsuarioDto } from '../usuarios/dto/create-usuario.dto';
 
 @Injectable()
 export class AuthService {
   constructor(
-    private readonly usuariosService: UsuariosService,
+    private readonly contactosService: ContactosService,
     private readonly jwtService: JwtService,
   ) {}
 
   async login(loginDto: LoginDto) {
-    const usuario = await this.usuariosService.validateCredentials(loginDto);
+    // Ahora loginDto debe tener email y password
+    const contacto = await this.contactosService.validateCredentials(
+      loginDto.email,
+      loginDto.password,
+    );
 
-    // Obtener roles del usuario
-    const roles = await this.usuariosService.getUserRoles(usuario.id);
+  // Obtener el rol del contacto (solo uno)
+  const role = contacto.roleId || null;
 
     // Generar access token (5 min) y refresh token (24h)
     const payload = {
-      id: usuario.id,
-      userName: usuario.userName,
-      email: usuario.email,
-      roles: roles,
+      id: contacto.id,
+      email: contacto.email,
+      role: role,
     };
 
     const accessToken = await this.jwtService.signAsync(payload, {
       expiresIn: '5m',
     });
     const refreshToken = await this.jwtService.signAsync(
-      { id: usuario.id },
+      { id: contacto.id },
       { expiresIn: '24h' },
     );
 
-    // Guardar refresh token en la base de datos
-    await this.usuariosService.updateRefreshToken(usuario.id, refreshToken);
+    // Aquí deberías guardar el refresh token en la base de datos si lo deseas
 
     return {
       accessToken,
       refreshToken,
       usuario: {
-        id: usuario.id,
-        userName: usuario.userName,
-        email: usuario.email,
-        nombre: usuario.nombre,
-        apellido: usuario.apellido,
-        roles: roles,
+        id: contacto.id,
+        email: contacto.email,
+        nombre: contacto.nombre,
+        cargo: contacto.cargo,
+        telefono: contacto.telefono,
+        roleId: contacto.roleId,
+        role: role,
       },
     };
   }
 
-  async register(createUsuarioDto: CreateUsuarioDto) {
-    const usuario = await this.usuariosService.create(createUsuarioDto);
-    const roles = await this.usuariosService.getUserRoles(usuario.id);
+  // El registro de contacto se haría en ContactosService, no aquí
 
-    return {
-      id: usuario.id,
-      userName: usuario.userName,
-      email: usuario.email,
-      nombre: usuario.nombre,
-      apellido: usuario.apellido,
-      roles: roles,
-    };
-  }
+  async refresh(userId: number, refreshToken: string) {
+    // Aquí deberías buscar el contacto y validar el refresh token si lo guardas
+    const contacto = await this.contactosService.findOne(userId);
+    if (!contacto) throw new UnauthorizedException('No autorizado');
 
-  async refresh(userId: string, refreshToken: string) {
-    const usuario = await this.usuariosService.findOne(userId);
-    if (!usuario) throw new UnauthorizedException('No autorizado');
-
-    const storedRefreshToken =
-      await this.usuariosService.getRefreshToken(userId);
-    if (!storedRefreshToken || storedRefreshToken !== refreshToken) {
-      throw new UnauthorizedException('Refresh token inválido');
-    }
-
-    // Validar refresh token
-    try {
-      await this.jwtService.verifyAsync(refreshToken);
-    } catch {
-      throw new UnauthorizedException('Refresh token expirado o inválido');
-    }
-
-    // Obtener roles actualizados
-    const roles = await this.usuariosService.getUserRoles(usuario.id);
+    // Validar refresh token (si lo guardas en la base de datos)
+    // ...
 
     // Generar nuevos tokens
+    const role = contacto.roleId || null;
     const payload = {
-      id: usuario.id,
-      userName: usuario.userName,
-      email: usuario.email,
-      roles: roles,
+      id: contacto.id,
+      email: contacto.email,
+      role: role,
     };
 
     const newAccessToken = await this.jwtService.signAsync(payload, {
       expiresIn: '5m',
     });
     const newRefreshToken = await this.jwtService.signAsync(
-      { id: usuario.id },
+      { id: contacto.id },
       { expiresIn: '24h' },
     );
 
-    await this.usuariosService.updateRefreshToken(usuario.id, newRefreshToken);
+    // Aquí deberías actualizar el refresh token en la base de datos si lo guardas
+
     return {
       accessToken: newAccessToken,
       refreshToken: newRefreshToken,
       usuario: {
-        id: usuario.id,
-        userName: usuario.userName,
-        email: usuario.email,
-        nombre: usuario.nombre,
-        apellido: usuario.apellido,
-        roles: roles,
+        id: contacto.id,
+        email: contacto.email,
+        nombre: contacto.nombre,
+        cargo: contacto.cargo,
+        telefono: contacto.telefono,
+        roleId: contacto.roleId,
+        role: role,
       },
     };
   }

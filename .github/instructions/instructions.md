@@ -15,3 +15,4 @@ applyTo: '**'
 - Se debe seguir  teniendo en cuenta la generaciópn también de los tokens de refresco.
 -Cuando un usuario inicie sesión correctamente, se debe registrar un log en la tabla de Contacto login, po lo que hay que crear esa entidad también y su respectivo módulo en nest.
 Se cuando se registre inicio de sesión se debe establecer por defecto que se haga con el LoginProvider   EMAIL_Y_PASSWORD, el cual se encuentra declarado como un enum en la entidad ContactoLogin.
+

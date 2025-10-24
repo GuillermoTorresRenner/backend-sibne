@@ -8,7 +8,7 @@ export class ContactosController {
   constructor(private readonly contactosService: ContactosService) {}
 
   @Post()
-  create(@Body() createContactoDto: CreateContactoDto) {
+  Register(@Body() createContactoDto: CreateContactoDto) {
     return this.contactosService.create(createContactoDto);
   }
 

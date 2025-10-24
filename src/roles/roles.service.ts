@@ -12,11 +12,7 @@ export class RolesService {
   async findOne(id: string) {
     const role = await this.prismaService.role.findUnique({
       where: { id },
-      include: {
-        usuarioRoles: {
-          include: { usuario: true },
-        },
-      },
+      // No hay relaciones usuarioRoles en la nueva estructura
     });
     if (!role) throw new NotFoundException('Rol no encontrado');
     return role;
@@ -25,7 +21,7 @@ export class RolesService {
   async findByName(name: string) {
     return await this.prismaService.role.findFirst({
       where: {
-        OR: [{ name }, { normalizedName: name.toUpperCase() }],
+        name,
       },
     });
   }
@@ -35,8 +31,6 @@ export class RolesService {
       data: {
         id: crypto.randomUUID(),
         name,
-        normalizedName: name.toUpperCase(),
-        concurrencyStamp: crypto.randomUUID(),
       },
     });
   }

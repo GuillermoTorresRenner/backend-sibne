@@ -8,7 +8,8 @@ async function encryptExistingPasswords() {
 
   try {
     // Obtener todos los usuarios que tienen contraseñas en texto plano
-    const usuarios = await prisma.usuario.findMany({
+  // Script obsoleto: la entidad usuario ya no existe
+  // const usuarios = await prisma.usuario.findMany({
       where: {
         passwordHash: {
           not: null,
@@ -61,7 +62,7 @@ async function encryptExistingPasswords() {
         }
 
         // Actualizar en la base de datos
-        await prisma.usuario.update({
+  // await prisma.usuario.update({
           where: { id: usuario.id },
           data: {
             passwordHash: hashedPassword,
@@ -99,7 +100,7 @@ async function verifyEncryptedPasswords() {
   console.log('\n🔍 Verificando contraseñas encriptadas...');
 
   try {
-    const usuarios = await prisma.usuario.findMany({
+  // const usuarios = await prisma.usuario.findMany({
       where: {
         passwordHash: {
           not: null,
@@ -156,7 +157,7 @@ async function testLoginWithEncryptedPasswords() {
 
   try {
     // Obtener algunos usuarios encriptados para probar
-    const usuarios = await prisma.usuario.findMany({
+  // const usuarios = await prisma.usuario.findMany({
       where: {
         passwordHash: {
           startsWith: '$2', // Solo usuarios con contraseñas encriptadas

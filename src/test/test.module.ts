@@ -1,11 +1,10 @@
 import { Module } from '@nestjs/common';
-import { TestController } from './test.controller';
 import { AuthModule } from '../auth/auth.module';
-import { UsuariosModule } from '../usuarios/usuarios.module';
 import { RolesModule } from '../roles/roles.module';
+import { ContactosModule } from '../contactos/contactos.module';
 
 @Module({
-  imports: [AuthModule, UsuariosModule, RolesModule],
-  controllers: [TestController],
+  imports: [AuthModule, RolesModule, ContactosModule],
+  // controllers: [],
 })
 export class TestModule {}

@@ -6,12 +6,12 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
-import { UsuariosService } from '../../usuarios/usuarios.service';
+import { ContactosService } from '../../contactos/contactos.service';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(
-    private readonly usuariosService: UsuariosService,
+    private readonly contactosService: ContactosService,
     private readonly jwtService: JwtService,
   ) {}
 
@@ -30,16 +30,17 @@ export class AuthGuard implements CanActivate {
         secret: process.env.JWT_SECRET,
       });
 
-      const usuario = await this.usuariosService.findOne(payload.id);
-      if (!usuario || !usuario.habilitado) {
-        throw new UnauthorizedException('Usuario no autorizado');
+      const contacto = await this.contactosService.findOne(payload.id);
+      if (!contacto) {
+        throw new UnauthorizedException('Contacto no autorizado');
       }
 
-      const roles = await this.usuariosService.getUserRoles(payload.id);
+  // Adaptar rol: solo uno
+  const role = contacto.roleId || null;
 
-      request['userID'] = payload.id;
-      request['usuario'] = usuario;
-      request['roles'] = roles;
+  request['userID'] = payload.id;
+  request['usuario'] = contacto;
+  request['role'] = role;
     } catch (error) {
       throw new UnauthorizedException('Token inválido');
     }

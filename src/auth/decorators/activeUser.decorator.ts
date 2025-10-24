@@ -6,7 +6,7 @@ export const ActiveUser = createParamDecorator(
     return {
       userID: request.userID,
       usuario: request.usuario,
-      roles: request.roles,
+      role: request.role,
     };
   },
 );

@@ -4,9 +4,7 @@ import { PrismaService } from './prisma/prisma.service';
 import { AuthModule } from './auth/auth.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { MulterModule } from '@nestjs/platform-express';
-import { UsuariosModule } from './usuarios/usuarios.module';
 import { RolesModule } from './roles/roles.module';
-import { TestModule } from './test/test.module';
 import { ContactosModule } from './contactos/contactos.module';
 
 @Module({
@@ -16,9 +14,7 @@ import { ContactosModule } from './contactos/contactos.module';
     MulterModule.register({
       dest: './uploads',
     }),
-    UsuariosModule,
     RolesModule,
-    TestModule,
     ContactosModule,
   ],
   controllers: [],
