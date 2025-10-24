@@ -38,9 +38,18 @@ export class TestController {
       user: user,
     };
   }
+  
+  @Get('usuario-empresa-only')
+  @Auth([AuthRoles.USUARIO_EMPRESA])
+  usuarioEmpresaOnly(@ActiveUser() user) {
+    return {
+      message: 'Solo usuarios empresa pueden acceder',
+      user: user,
+    };
+  }
   @Get('usuario-only')
   @Auth([AuthRoles.USUARIO])
-  usuarioEmpresaOnly(@ActiveUser() user) {
+  usuarioOnly(@ActiveUser() user) {
     return {
       message: 'Solo usuarios pueden acceder',
       user: user,

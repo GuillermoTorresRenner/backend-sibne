@@ -30,17 +30,20 @@ export class AuthGuard implements CanActivate {
         secret: process.env.JWT_SECRET,
       });
 
-      const contacto = await this.contactosService.findOne(payload.id);
+      const contacto = await this.contactosService.findOne(payload.id, true);
       if (!contacto) {
         throw new UnauthorizedException('Contacto no autorizado');
       }
 
-  // Adaptar rol: solo uno
-  const role = contacto.roleId || null;
+      // Obtener el nombre del rol (no el ID)
+      let roleName = null;
+      if (contacto.role && contacto.role.name) {
+        roleName = contacto.role.name;
+      }
 
-  request['userID'] = payload.id;
-  request['usuario'] = contacto;
-  request['role'] = role;
+      request['userID'] = payload.id;
+      request['usuario'] = contacto;
+      request['role'] = roleName;
     } catch (error) {
       throw new UnauthorizedException('Token inválido');
     }

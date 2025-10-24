@@ -27,8 +27,11 @@ export class ContactosService {
     return `This action returns all contactos`;
   }
 
-  async findOne(id: number) {
-    const contacto = await this.prisma.contacto.findUnique({ where: { id } });
+  async findOne(id: number, withRole = false) {
+    const contacto = await this.prisma.contacto.findUnique({
+      where: { id },
+      include: withRole ? { role: true } : undefined,
+    });
     if (!contacto) throw new NotFoundException('Contacto no encontrado');
     return contacto;
   }
