@@ -67,7 +67,7 @@ export class AuthService {
         cargo: contacto.cargo,
         telefono: contacto.telefono,
         roleId: contacto.roleId,
-        role: roleName,
+        role: roleName.name,
       },
     };
   }
