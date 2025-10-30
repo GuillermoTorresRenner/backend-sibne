@@ -8,6 +8,7 @@ import { LoginDto } from './dto/login.dto';
 import { JwtService } from '@nestjs/jwt';
 import { ContactoLoginService } from '../contacto-login/contacto-login.service';
 import { $Enums } from '@prisma/client';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class AuthService {
@@ -15,6 +16,7 @@ export class AuthService {
     private readonly contactosService: ContactosService,
     private readonly jwtService: JwtService,
     private readonly contactoLoginService: ContactoLoginService,
+    private readonly prismaService: PrismaService,
   ) {}
 
   async login(loginDto: LoginDto) {
@@ -33,6 +35,10 @@ export class AuthService {
 
     // Obtener el rol del contacto (solo uno)
     const role = contacto.roleId || null;
+    const roleName = await this.prismaService.role.findUnique({
+      where: { id: contacto.roleId },
+      select: { name: true },
+    });
 
     // Generar access token (5 min) y refresh token (24h)
     const payload = {
@@ -61,7 +67,7 @@ export class AuthService {
         cargo: contacto.cargo,
         telefono: contacto.telefono,
         roleId: contacto.roleId,
-        role: role,
+        role: roleName,
       },
     };
   }
