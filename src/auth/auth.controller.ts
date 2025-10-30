@@ -13,6 +13,9 @@ import { LoginDto } from './dto/login.dto';
 import { AuthGuard } from './guards/auth.guard';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { ActiveUser } from './decorators/activeUser.decorator';
+import { ConfigService } from '@nestjs/config';
+import { HttpService } from '@nestjs/axios';
+import { lastValueFrom } from 'rxjs';
 
 /**
  * @UseGuards(AuthGuard) - Verificar Login Para verificar que el usuario esté logueado:
@@ -27,6 +30,8 @@ import { ActiveUser } from './decorators/activeUser.decorator';
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
+    private readonly configService: ConfigService,
+    private readonly httpService: HttpService,
   ) {}
 
 
@@ -117,5 +122,76 @@ async me(@ActiveUser() user) {
     role: user.role,  
   };
 }
+
+//====================ClaveUnica====================//
+
+  /**
+   * Endpoint para iniciar el flujo de autenticación con ClaveÚnica
+   * Redirige al usuario al formulario de ClaveÚnica
+   */
+  @Get('claveunica/init')
+  async claveUnicaInit(@Res() res, @Req() req) {
+    const clientId = this.configService.get('CLAVEUNICA_CLIENT_ID');
+    const redirectUri = encodeURIComponent(this.configService.get('CLAVEUNICA_REDIRECT_URI'));
+    const state = Math.random().toString(36).substring(2) + Date.now(); // Token anti-CSRF simple
+    // Aquí deberías guardar el state en la sesión/cookie para validación posterior
+    req.session = req.session || {};
+    req.session.cu_state = state;
+    const url = `https://accounts.claveunica.gob.cl/openid/authorize/?client_id=${clientId}&response_type=code&scope=openid run name&redirect_uri=${redirectUri}&state=${state}`;
+    return res.redirect(url);
+  }
+
+  /**
+   * Endpoint de callback para recibir el código de autorización de ClaveÚnica
+   */
+  @Get('claveunica/callback')
+  async claveUnicaCallback(@Req() req, @Res() res) {
+    const { code, state } = req.query;
+    // Validar el state contra el guardado en sesión/cookie
+    if (!code) {
+      return res.status(400).json({ message: 'Código de autorización no recibido' });
+    }
+    if (!req.session || state !== req.session.cu_state) {
+      return res.status(400).json({ message: 'State inválido o sesión no encontrada' });
+    }
+    // Intercambiar el código por el access_token
+    const clientId = this.configService.get('CLAVEUNICA_CLIENT_ID');
+    const clientSecret = this.configService.get('CLAVEUNICA_CLIENT_SECRET');
+    const redirectUri = this.configService.get('CLAVEUNICA_REDIRECT_URI');
+    const tokenUrl = 'https://accounts.claveunica.gob.cl/openid/token/';
+    const params = new URLSearchParams({
+      client_id: clientId,
+      client_secret: clientSecret,
+      redirect_uri: redirectUri,
+      grant_type: 'authorization_code',
+      code: code,
+      state: state,
+    });
+    try {
+      const tokenResponse = await lastValueFrom(
+        this.httpService.post(tokenUrl, params, {
+          headers: { 'content-type': 'application/x-www-form-urlencoded; charset=UTF-8' },
+        })
+      );
+      const accessToken = tokenResponse.data.access_token;
+      if (!accessToken) {
+        return res.status(401).json({ message: 'No se recibió access_token' });
+      }
+      // Obtener datos del usuario
+      const userInfoUrl = 'https://accounts.claveunica.gob.cl/openid/userinfo/';
+      const userInfoResponse = await lastValueFrom(
+        this.httpService.post(
+          userInfoUrl,
+          {},
+          { headers: { authorization: `Bearer ${accessToken}` } }
+        )
+      );
+      // Aquí puedes mapear los datos recibidos y crear el usuario en tu sistema si es necesario
+      return res.status(200).json({ claveUnica: userInfoResponse.data });
+    } catch (error) {
+      return res.status(500).json({ message: 'Error en autenticación ClaveÚnica', error: error.message });
+    }
+  }
+
 
 }
